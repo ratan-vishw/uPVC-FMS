@@ -723,6 +723,12 @@
 
             <!-- Controls Right -->
             <div class="flex items-center gap-[0.5rem] shrink-0">
+                <button type="button" id="btnDemoData" class="btn btn-ghost px-[0.5rem] text-amber-600 dark:text-amber-400"
+                    title="Load Sample Demo Data" aria-label="Load Demo Data">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[0.875rem]"></i>
+                    <span class="font-mono text-[0.6875rem] hidden xl:inline">Demo Data</span>
+                </button>
+
                 <button type="button" id="btnHeaderSync" class="btn btn-ghost px-[0.5rem]"
                     title="Sync Latest Changes from Google Sheet" aria-label="Sync from Sheet">
                     <i class="fa-solid fa-rotate text-[0.875rem] text-[#10B981]"></i>
@@ -817,16 +823,17 @@
                             <thead class="theme-bg-table-head sticky top-0 z-20 border-b border-[var(--border-main)]">
                                 <tr class="h-[2.5rem] font-mono text-[0.625rem] uppercase tracking-wider">
                                     <th class="w-[2.5%] px-[0.25rem] text-center">#</th>
-                                    <th class="w-[8%] px-[0.5rem]">Quotation ID</th>
-                                    <th class="w-[6.5%] px-[0.5rem]">Date</th>
-                                    <th class="w-[11%] px-[0.5rem]">Client / Site Name</th>
-                                    <th class="w-[8%] px-[0.5rem]">Vendor Name</th>
-                                    <th class="w-[8%] px-[0.5rem]">Location</th>
-                                    <th class="w-[7%] px-[0.5rem]">Variant</th>
-                                    <th class="w-[6.5%] px-[0.5rem]">Mesh / Jaali</th>
-                                    <th class="w-[7%] px-[0.5rem]">Glass Specs</th>
+                                    <th class="w-[7%] px-[0.5rem]">Date</th>
+                                    <th class="w-[14%] px-[0.5rem] leading-tight">
+                                        <div>Client / Site Name</div>
+                                        <div class="text-[0.5625rem] text-[var(--text-muted)] font-normal normal-case">Vendor Name</div>
+                                    </th>
+                                    <th class="w-[8.5%] px-[0.5rem]">Location</th>
+                                    <th class="w-[7.5%] px-[0.5rem]">Variant</th>
+                                    <th class="w-[7%] px-[0.5rem]">Mesh / Jaali</th>
+                                    <th class="w-[8%] px-[0.5rem]">Glass Specs</th>
                                     <th class="w-[3.5%] px-[0.25rem] text-center">Qty</th>
-                                    <th class="w-[4%] px-[0.25rem] text-center">Lead Time</th>
+                                    <th class="w-[4.5%] px-[0.25rem] text-center">Lead Time</th>
                                     <th class="w-[7%] px-[0.25rem] text-center">1. Rough Sizes</th>
                                     <th class="w-[11%] px-[0.5rem]">Uploads &amp; Amounts</th>
                                     <th class="w-[10%] px-[0.5rem] text-center">Actions</th>
@@ -932,7 +939,7 @@
                             </p>
 
                             <div id="detailUploadCards"
-                                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[0.75rem]">
+                                class="grid grid-cols-1 md:grid-cols-3 gap-[0.75rem] items-stretch">
                             </div>
                         </div>
                     </section>
@@ -995,7 +1002,7 @@
                                 <span class="chip chip-doc">Rough Sizes &bull; Vendor Quote &bull; Our Quote &bull; PO
                                     Order &bull; Bills</span>
                             </div>
-                            <div id="poTransUploads" class="grid grid-cols-1 sm:grid-cols-2 gap-[0.75rem]">
+                            <div id="poTransUploads" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-[0.75rem] items-stretch">
                             </div>
                         </div>
                     </section>
@@ -1042,19 +1049,20 @@
                         <table class="w-full max-w-full table-fixed border-collapse text-left">
                             <thead class="theme-bg-table-head sticky top-0 z-20 border-b border-[var(--border-main)]">
                                 <tr class="h-[2.5rem] font-mono text-[0.625rem] uppercase tracking-wider">
-                                    <th class="w-[6.5%] px-[0.5rem]">PO Date</th>
-                                    <th class="w-[7.5%] px-[0.5rem]">PO / Quote ID</th>
-                                    <th class="w-[12%] px-[0.5rem]">Client / Site Name</th>
-                                    <th class="w-[8.5%] px-[0.5rem]">Vendor Name</th>
-                                    <th class="w-[8.5%] px-[0.5rem]">Location</th>
-                                    <th class="w-[7.5%] px-[0.5rem]">Variant</th>
-                                    <th class="w-[6.5%] px-[0.5rem]">Mesh / Jaali</th>
-                                    <th class="w-[8%] px-[0.5rem]">Glass Specs</th>
-                                    <th class="w-[3.5%] px-[0.25rem] text-center">Qty</th>
-                                    <th class="w-[4%] px-[0.25rem] text-center">Lead Time</th>
-                                    <th class="w-[9%] px-[0.25rem] text-center">Rough Sizes / PO Order</th>
-                                    <th class="w-[13%] px-[0.5rem]">Uploads &amp; Amounts</th>
-                                    <th class="w-[5.5%] px-[0.5rem] text-center">Actions</th>
+                                    <th class="w-[7.5%] px-[0.5rem]">PO Date</th>
+                                    <th class="w-[16.5%] px-[0.5rem] leading-tight">
+                                        <div>Client / Site Name</div>
+                                        <div class="text-[0.5625rem] text-[var(--text-muted)] font-normal normal-case">Vendor Name</div>
+                                    </th>
+                                    <th class="w-[9.5%] px-[0.5rem]">Location</th>
+                                    <th class="w-[8.5%] px-[0.5rem]">Variant</th>
+                                    <th class="w-[7%] px-[0.5rem]">Mesh / Jaali</th>
+                                    <th class="w-[8.5%] px-[0.5rem]">Glass Specs</th>
+                                    <th class="w-[4%] px-[0.25rem] text-center">Qty</th>
+                                    <th class="w-[4.5%] px-[0.25rem] text-center">Lead Time</th>
+                                    <th class="w-[10%] px-[0.25rem] text-center">Rough Sizes / PO Order</th>
+                                    <th class="w-[16%] px-[0.5rem]">Uploads &amp; Amounts</th>
+                                    <th class="w-[8%] px-[0.5rem] text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="poTableBody"
@@ -1246,7 +1254,7 @@
                     <div class="mt-[1.5rem] pt-[1rem] border-t border-[var(--border-main)]">
                         <h4 class="field-label text-[0.75rem] mb-[0.75rem]">Uploads &amp; Invoices
                         </h4>
-                        <div id="newPoUploads" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[1rem]">
+                        <div id="newPoUploads" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-[0.75rem] items-stretch">
                         </div>
                     </div>
                 </div>
@@ -1666,17 +1674,525 @@
                     if (stored) {
                         var parsed = JSON.parse(stored);
                         if (parsed && typeof parsed === 'object') {
-                            ingestServerData(parsed);
-                            return true;
+                            var hasData = (parsed.masterQuotations && parsed.masterQuotations.length) || (parsed.purchaseOrders && parsed.purchaseOrders.length);
+                            if (hasData) {
+                                ingestServerData(parsed);
+                                return true;
+                            }
                         }
                     }
                 } catch (e) { }
-                ingestServerData({
-                    masterQuotations: [],
-                    purchaseOrders: [],
-                    config: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
-                });
+                var demo = getDemoDataPayload();
+                ingestServerData(demo);
+                persistLocalProductionData();
                 return false;
+            }
+
+            function getDemoDataPayload() {
+                return {
+                    masterQuotations: [
+                        {
+                            id: 'QT-UPVC-0001',
+                            site: 'Prestige Falcon City - Tower 4',
+                            date: '2026-10-14',
+                            location: 'Kanakapura Road, Bengaluru',
+                            vendor: 'NCL',
+                            variant: '3-Track Sliding',
+                            mesh: 'SS 304 Mesh',
+                            glass: '6mm, Clear, Toughened',
+                            qty: 14,
+                            leadTime: 15,
+                            roughSizes: [
+                                {
+                                    id: 'demo_dwg_01',
+                                    name: 'Tower4_Window_Schedule.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 348160,
+                                    uploadedAt: '2026-10-14 09:30'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_vq_01',
+                                    name: 'NCL_Quote_Ref_9821.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 184320,
+                                    amount: 210000,
+                                    uploadedAt: '2026-10-15 11:20'
+                                }
+                            ],
+                            vendorAmount: 210000,
+                            ourQuote: [
+                                {
+                                    id: 'demo_oq_01',
+                                    name: 'Quotation_PFC_Tower4_Final.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 225280,
+                                    amount: 285000,
+                                    uploadedAt: '2026-10-15 17:00'
+                                }
+                            ],
+                            ourAmount: 285000
+                        },
+                        {
+                            id: 'QT-UPVC-0002',
+                            site: 'Oberoi Sky City - Penthouse B',
+                            date: '2026-10-15',
+                            location: 'Borivali East, Western Express Hwy, Mumbai',
+                            vendor: 'Prominance',
+                            variant: 'Casement / Openable, Sliding Folding',
+                            mesh: 'Pleated Mesh',
+                            glass: 'DGU (Double Glazed), 6mm, Clear, Toughened',
+                            qty: 22,
+                            leadTime: 21,
+                            roughSizes: [
+                                {
+                                    id: 'demo_dwg_02',
+                                    name: 'Penthouse_Glazing_Layout.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 460800,
+                                    uploadedAt: '2026-10-15 10:15'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_vq_02',
+                                    name: 'Prominance_UPVC_Special_Fab.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 317440,
+                                    amount: 480000,
+                                    uploadedAt: '2026-10-16 14:00'
+                                }
+                            ],
+                            vendorAmount: 480000,
+                            ourQuote: [
+                                {
+                                    id: 'demo_oq_02',
+                                    name: 'Oberoi_SkyCity_Client_Proposal.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 266240,
+                                    amount: 640000,
+                                    uploadedAt: '2026-10-16 18:30'
+                                }
+                            ],
+                            ourAmount: 640000
+                        },
+                        {
+                            id: 'QT-UPVC-0003',
+                            site: 'Sobha Dream Acres - Villa 58',
+                            date: '2026-10-16',
+                            location: 'Panathur Road, Balagere, Bengaluru',
+                            vendor: 'Grayzo',
+                            variant: '2.5-Track Sliding',
+                            mesh: 'Fiberglass Mesh',
+                            glass: '5mm, Clear, Toughened',
+                            qty: 9,
+                            leadTime: 12,
+                            roughSizes: [
+                                {
+                                    id: 'demo_dwg_03',
+                                    name: 'Villa58_Site_Measurements.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 194560,
+                                    uploadedAt: '2026-10-16 12:45'
+                                }
+                            ],
+                            vendorQuote: [],
+                            vendorAmount: 0,
+                            ourQuote: [],
+                            ourAmount: 0
+                        },
+                        {
+                            id: 'QT-UPVC-0004',
+                            site: 'Greenfield Commercial Hub - Wing B',
+                            date: '2026-10-17',
+                            location: 'Hitec City, Phase 2, Hyderabad',
+                            vendor: 'Alumil',
+                            variant: 'Fix-Light, Ventilator',
+                            mesh: 'None',
+                            glass: '10mm, Clear, Toughened',
+                            qty: 36,
+                            leadTime: 25,
+                            roughSizes: [
+                                {
+                                    id: 'demo_dwg_04',
+                                    name: 'Facade_Window_Specs_WingB.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 532480,
+                                    uploadedAt: '2026-10-17 09:00'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_vq_04',
+                                    name: 'Alumil_Commercial_Costing.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 286720,
+                                    amount: 560000,
+                                    uploadedAt: '2026-10-17 15:30'
+                                }
+                            ],
+                            vendorAmount: 560000,
+                            ourQuote: [
+                                {
+                                    id: 'demo_oq_04',
+                                    name: 'Greenfield_Approved_Commercial_Offer.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 296960,
+                                    amount: 720000,
+                                    uploadedAt: '2026-10-18 11:00'
+                                }
+                            ],
+                            ourAmount: 720000
+                        },
+                        {
+                            id: 'QT-UPVC-0005',
+                            site: 'Palm Meadows Estate - Villa 14',
+                            date: '2026-10-18',
+                            location: 'Airport Road, Yelahanka, Bengaluru',
+                            vendor: 'WinFrame',
+                            variant: 'Door Frames, 2-Track Sliding',
+                            mesh: 'SS 304 Mesh',
+                            glass: 'Frosted / Obscure, 5mm, Clear, Toughened',
+                            qty: 16,
+                            leadTime: 14,
+                            roughSizes: [
+                                {
+                                    id: 'demo_dwg_05',
+                                    name: 'Villa14_Opening_Schedule.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 215040,
+                                    uploadedAt: '2026-10-18 14:20'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_vq_05',
+                                    name: 'WinFrame_UPVC_Quotation.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 179200,
+                                    amount: 195000,
+                                    uploadedAt: '2026-10-18 16:50'
+                                }
+                            ],
+                            vendorAmount: 195000,
+                            ourQuote: [],
+                            ourAmount: 0
+                        }
+                    ],
+                    purchaseOrders: [
+                        {
+                            id: 'PO-UPVC-0001',
+                            quotationId: 'QT-UPVC-0006',
+                            site: 'Grand Hyatt Residences - Tower A',
+                            date: '2026-10-02',
+                            location: 'Bandra Kurla Complex, Mumbai',
+                            vendor: 'Prominance',
+                            variant: '3-Track Sliding, Ventilator',
+                            mesh: 'SS 304 Mesh',
+                            glass: '6mm, Clear, Toughened, DGU (Double Glazed)',
+                            qty: 28,
+                            leadTime: 18,
+                            roughSizes: [
+                                {
+                                    id: 'demo_po_dwg_01',
+                                    name: 'Hyatt_TowerA_Approved_DWG.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 491520,
+                                    uploadedAt: '2026-10-02 09:15'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_po_vq_01',
+                                    name: 'Prominance_Final_Billing_Quote.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 215040,
+                                    amount: 520000,
+                                    uploadedAt: '2026-10-02 12:30'
+                                }
+                            ],
+                            vendorAmount: 520000,
+                            ourQuote: [
+                                {
+                                    id: 'demo_po_oq_01',
+                                    name: 'Client_Contract_Hyatt_Signed.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 358400,
+                                    amount: 695000,
+                                    uploadedAt: '2026-10-03 14:00'
+                                }
+                            ],
+                            ourAmount: 695000,
+                            poOrder: [
+                                {
+                                    id: 'demo_po_doc_01',
+                                    name: 'Official_PO_HYATT_001.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 296960,
+                                    uploadedAt: '2026-10-04 10:00'
+                                }
+                            ],
+                            bills: [
+                                { date: '2026-10-08', invoiceNo: 'INV-PRM-1044', amount: 260000 },
+                                { date: '2026-10-15', invoiceNo: 'INV-PRM-1089', amount: 260000 }
+                            ],
+                            billsAmt: 520000
+                        },
+                        {
+                            id: 'PO-UPVC-0002',
+                            quotationId: 'QT-UPVC-0007',
+                            site: 'Embassy Boulevard - Luxury Villa 19',
+                            date: '2026-10-06',
+                            location: 'Bellary Road, Yelahanka, Bengaluru',
+                            vendor: 'NCL',
+                            variant: 'Casement / Openable',
+                            mesh: 'Pleated Mesh',
+                            glass: '5mm, Clear, Toughened',
+                            qty: 15,
+                            leadTime: 14,
+                            roughSizes: [
+                                {
+                                    id: 'demo_po_dwg_02',
+                                    name: 'Villa19_Elevation_CAD.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 317440,
+                                    uploadedAt: '2026-10-06 11:00'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_po_vq_02',
+                                    name: 'NCL_Revised_Quote_772.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 194560,
+                                    amount: 240000,
+                                    uploadedAt: '2026-10-06 15:40'
+                                }
+                            ],
+                            vendorAmount: 240000,
+                            ourQuote: [
+                                {
+                                    id: 'demo_po_oq_02',
+                                    name: 'Client_Invoice_Quote_EB19.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 209920,
+                                    amount: 320000,
+                                    uploadedAt: '2026-10-07 10:15'
+                                }
+                            ],
+                            ourAmount: 320000,
+                            poOrder: [
+                                {
+                                    id: 'demo_po_doc_02',
+                                    name: 'PO_NCL_EB19_Signed.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 184320,
+                                    uploadedAt: '2026-10-07 14:00'
+                                }
+                            ],
+                            bills: [
+                                { date: '2026-10-12', invoiceNo: 'INV-NCL-992', amount: 120000 }
+                            ],
+                            billsAmt: 120000
+                        },
+                        {
+                            id: 'PO-UPVC-0003',
+                            quotationId: '',
+                            site: 'Brigade Gateway Commercial Block',
+                            date: '2026-10-10',
+                            location: 'Rajajinagar, Malleshwaram, Bengaluru',
+                            vendor: 'Alumil',
+                            variant: 'Sliding Folding',
+                            mesh: 'SS 304 Mesh',
+                            glass: '10mm, Clear, Toughened',
+                            qty: 8,
+                            leadTime: 20,
+                            roughSizes: [
+                                {
+                                    id: 'demo_po_dwg_03',
+                                    name: 'Direct_PO_Site_Specs.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 286720,
+                                    uploadedAt: '2026-10-10 10:00'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_po_vq_03',
+                                    name: 'Alumil_Direct_Price_Agreed.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 163840,
+                                    amount: 380000,
+                                    uploadedAt: '2026-10-10 12:00'
+                                }
+                            ],
+                            vendorAmount: 380000,
+                            ourQuote: [
+                                {
+                                    id: 'demo_po_oq_03',
+                                    name: 'Brigade_Gate_Contract.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 225280,
+                                    amount: 490000,
+                                    uploadedAt: '2026-10-10 16:00'
+                                }
+                            ],
+                            ourAmount: 490000,
+                            poOrder: [
+                                {
+                                    id: 'demo_po_doc_03',
+                                    name: 'PO_BrigadeGateway_Signed.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 235520,
+                                    uploadedAt: '2026-10-11 11:30'
+                                }
+                            ],
+                            bills: [],
+                            billsAmt: 0
+                        },
+                        {
+                            id: 'PO-UPVC-0004',
+                            quotationId: 'QT-UPVC-0008',
+                            site: 'Godrej Woods Phase 1',
+                            date: '2026-10-12',
+                            location: 'Sector 43, Noida, NCR',
+                            vendor: 'Poonam Alu.',
+                            variant: '2-Track Sliding',
+                            mesh: 'Fiberglass Mesh',
+                            glass: '5mm, Clear, Toughened',
+                            qty: 40,
+                            leadTime: 16,
+                            roughSizes: [
+                                {
+                                    id: 'demo_po_dwg_04',
+                                    name: 'Godrej_UnitPlans_AllWindows.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 634880,
+                                    uploadedAt: '2026-10-12 09:40'
+                                }
+                            ],
+                            vendorQuote: [
+                                {
+                                    id: 'demo_po_vq_04',
+                                    name: 'Poonam_Bulk_Pricing.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 220160,
+                                    amount: 410000,
+                                    uploadedAt: '2026-10-12 14:10'
+                                }
+                            ],
+                            vendorAmount: 410000,
+                            ourQuote: [
+                                {
+                                    id: 'demo_po_oq_04',
+                                    name: 'Our_Approved_Offer_GW1.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 245760,
+                                    amount: 535000,
+                                    uploadedAt: '2026-10-13 11:20'
+                                }
+                            ],
+                            ourAmount: 535000,
+                            poOrder: [
+                                {
+                                    id: 'demo_po_doc_04',
+                                    name: 'Official_PO_Godrej_Woods.pdf',
+                                    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                                    type: 'pdf',
+                                    size: 199680,
+                                    uploadedAt: '2026-10-13 15:30'
+                                }
+                            ],
+                            bills: [
+                                { date: '2026-10-16', invoiceNo: 'INV-PA-3021', amount: 205000 }
+                            ],
+                            billsAmt: 205000
+                        }
+                    ],
+                    config: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
+                };
+            }
+
+            function loadDemoData(force) {
+                var proceed = force || confirm('Load rich sample demo data (Quotations & Purchase Orders)?');
+                if (!proceed) return;
+
+                if (isAppsScript) {
+                    showSaveLoading('Seeding Demo Data...', 'Writing sample records to Google Sheets');
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            hideSaveLoading();
+                            showToast('Demo Data Seeded', (res.quotationsCount || 0) + ' Quotes & ' + (res.poCount || 0) + ' POs loaded into Google Sheets', 'success');
+                            reloadFromServer(true);
+                        })
+                        .withFailureHandler(function (err) {
+                            hideSaveLoading();
+                            showToast('Seed Failed', err.message || err, 'error');
+                        })
+                        .seedDemoData();
+                } else {
+                    var demo = getDemoDataPayload();
+                    ingestServerData(demo);
+                    persistLocalProductionData();
+                    renderAll();
+                    showToast('Demo Data Loaded', demo.masterQuotations.length + ' Quotes & ' + demo.purchaseOrders.length + ' POs loaded', 'success');
+                }
             }
 
             function persistLocalProductionData() {
@@ -2464,43 +2980,93 @@
                 return DOC_AMOUNT_KEY[docKey] ? DOC_AMOUNT_KEY[docKey].key : '';
             }
 
-            function uploadFileRowHtml(file, docKey, index, readonly, opts) {
-                var options = opts || {};
-                var icon = file.type === 'pdf' ? 'fa-file-pdf' :
-                    (file.type === 'image' ? 'fa-file-image' :
-                        (file.type === 'sheet' ? 'fa-file-excel' :
-                            (file.type === 'cad' ? 'fa-compass-drafting' : 'fa-file-lines')));
-                var amount = parseNumeric(file.amount);
-                var amountLine = '';
-                if (docKey === 'bills' && options.amountEditor && !readonly) {
-                    amountLine = '<div class="flex items-center gap-[0.35rem] mt-[0.25rem]">' +
-                        '<span class="font-mono text-[0.5rem] text-[var(--text-faint)] uppercase shrink-0">Amt excl. GST</span>' +
-                        '<input type="number" step="0.01" min="0" class="theme-input upload-amount-input" ' +
-                        'data-bill-saved="1" data-bill-index="' + index + '" data-bill-id="' +
-                        escapeHtml(file.id || file.url || ('idx:' + index)) + '" ' +
-                        'placeholder="0.00" value="' +
-                        escapeHtml(file.amount === null || file.amount === undefined ? '' : file.amount) + '" /></div>';
-                } else if (amount) {
-                    amountLine = '<p class="font-mono text-[0.5625rem] text-[var(--accent-cyan)] mt-[0.15rem]">' +
-                        formatRupee(amount) + ' excl. GST</p>';
+            function uploadEmptySlotPortraitHtml(docKey, inputId, readonly, pickedName) {
+                if (readonly) {
+                    return '<div class="h-[220px] border border-dashed border-[var(--border-subtle)] rounded-[0.5rem] flex flex-col items-center justify-center p-[1rem] text-center font-mono text-[0.6875rem] text-[var(--text-muted)] bg-[var(--bg-surface-sub)]/50">' +
+                        '<i class="fa-regular fa-file text-[1.75rem] text-[var(--text-faint)] mb-[0.5rem]"></i>' +
+                        '<span>No file uploaded yet</span></div>';
                 }
-                return '<div class="doc-card p-[0.5rem]">' +
-                    '<div class="flex items-center gap-[0.5rem]">' +
-                    '<i class="fa-solid ' + icon + ' text-[1rem] text-[var(--accent-blue)] cursor-pointer hover:scale-110 transition-transform" data-upload-view="' + index + '" title="Preview in app"></i>' +
-                    '<div class="flex-1 min-w-0 cursor-pointer" data-upload-view="' + index + '" title="Click to preview in app">' +
-                    '<p class="font-mono text-[0.6875rem] font-semibold truncate hover:underline hover:text-[var(--accent-blue)]" title="' +
-                    escapeHtml(file.name) + '">' + escapeHtml(file.name || 'Attachment') + '</p>' +
-                    '<p class="font-mono text-[0.5625rem] text-[var(--text-muted)]">' +
-                    escapeHtml(String(file.type || 'file').toUpperCase()) + ' &bull; ' +
-                    formatFileSize(file.size) + (file.uploadedAt ? ' &bull; ' + displayDate(file.uploadedAt) : '') + '</p></div>' +
-                    '<div class="flex items-center gap-[0.25rem] shrink-0">' +
-                    '<button type="button" class="btn btn-ghost btn-xs text-[var(--accent-blue)]" data-upload-view="' + index +
-                    '" title="Preview in app"><i class="fa-solid fa-eye"></i></button>' +
-                    '<a class="btn btn-ghost btn-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]" href="' + escapeHtml(file.url || file.previewUrl || '#') +
-                    '" target="_blank" rel="noopener" title="Open in Google Drive"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>' +
-                    (readonly ? '' : '<button type="button" class="btn btn-ghost btn-xs text-red-500 hover:bg-red-500/10" data-upload-remove="' + index +
-                        '" title="Delete this revision"><i class="fa-solid fa-trash"></i></button>') +
-                    '</div></div>' + amountLine + '</div>';
+                return '<label for="' + inputId + '" class="h-[220px] border-2 border-dashed border-[var(--border-main)] hover:border-[var(--accent-blue)] rounded-[0.5rem] flex flex-col items-center justify-center p-[1rem] text-center cursor-pointer bg-[var(--bg-surface-sub)]/30 hover:bg-[var(--accent-blue)]/5 transition-all group">' +
+                    '<div class="w-[2.75rem] h-[2.75rem] rounded-full bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] flex items-center justify-center text-[1.25rem] mb-[0.5rem] group-hover:scale-110 transition-transform">' +
+                    '<i class="fa-solid fa-cloud-arrow-up"></i></div>' +
+                    '<span class="font-mono text-[0.75rem] font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-blue)]">Upload File (Portrait)</span>' +
+                    '<span class="font-mono text-[0.625rem] text-[var(--text-muted)] mt-[0.25rem]">' + escapeHtml(pickedName || 'Drag & drop PDF / image or click') + '</span>' +
+                    '</label>';
+            }
+
+            function uploadFilePortraitCardHtml(file, docKey, index, readonly, opts) {
+                var resolved = resolveFileAttachment(file);
+                if (!resolved) return '';
+                var options = opts || {};
+                var isImg = isImageAttachment(resolved);
+                var url = resolved.url || resolved.previewUrl || '';
+                var driveId = resolved.id || extractDriveId(url) || extractDriveId(resolved.previewUrl);
+                var isPdf = resolved.type === 'pdf' || /\.pdf($|\?)/i.test(url) || (resolved.name && /\.pdf$/i.test(resolved.name));
+                var icon = isPdf ? 'fa-file-pdf text-red-500' :
+                    (isImg ? 'fa-file-image text-emerald-500' :
+                        (resolved.type === 'sheet' ? 'fa-file-excel text-green-600' :
+                            (resolved.type === 'cad' ? 'fa-compass-drafting text-blue-500' : 'fa-file-lines text-blue-400')));
+                var amount = parseNumeric(resolved.amount);
+
+                var previewInner = '';
+                if (isImg) {
+                    var imgSrc = (url.indexOf('data:') === 0 || url.indexOf('blob:') === 0) ? url :
+                        (driveId ? ('https://drive.google.com/thumbnail?id=' + driveId + '&sz=w800') : url);
+                    previewInner = '<img src="' + escapeHtml(imgSrc) + '" class="w-full h-full object-contain p-[0.35rem] select-none" alt="' + escapeHtml(resolved.name) + '" loading="lazy" />';
+                } else if (driveId) {
+                    var embedUrl = 'https://drive.google.com/file/d/' + driveId + '/preview';
+                    previewInner = '<iframe src="' + escapeHtml(embedUrl) + '" class="w-full h-full border-0 pointer-events-none select-none rounded-[0.375rem]" loading="lazy"></iframe>';
+                } else if (isPdf && url && url !== '#') {
+                    previewInner = '<iframe src="' + escapeHtml(url) + '#toolbar=0&navpanes=0&scrollbar=0" class="w-full h-full border-0 pointer-events-none bg-white rounded-[0.375rem] select-none" loading="lazy"></iframe>';
+                } else {
+                    previewInner = '<div class="w-full h-full flex flex-col items-center justify-center p-[1rem] bg-gradient-to-b from-slate-500/5 to-slate-500/10 text-center select-none">' +
+                        '<div class="w-[3.5rem] h-[4.5rem] rounded-[0.25rem] border-2 border-dashed border-[var(--border-main)] flex flex-col items-center justify-center bg-[var(--bg-surface-sub)] mb-[0.5rem] shadow-sm">' +
+                        '<i class="fa-solid ' + icon + ' text-[1.75rem]"></i>' +
+                        '</div>' +
+                        '<span class="font-mono text-[0.6875rem] font-bold text-[var(--text-primary)] truncate max-w-full px-[0.5rem]">' + escapeHtml(resolved.name) + '</span>' +
+                        '<span class="font-mono text-[0.5625rem] text-[var(--text-muted)] mt-[0.2rem] uppercase">' + escapeHtml(resolved.type || 'DOCUMENT') + ' &bull; PORTRAIT</span>' +
+                        '</div>';
+                }
+
+                var overlay = '<div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-[0.5rem] p-[0.5rem] text-white z-10 cursor-pointer" data-upload-view="' + index + '">' +
+                    '<button type="button" class="btn btn-primary btn-xs shadow-lg inline-flex items-center gap-[0.35rem] pointer-events-none">' +
+                    '<i class="fa-solid fa-eye text-[0.75rem]"></i><span>Preview Fullscreen</span></button>' +
+                    '<div class="flex items-center gap-[0.35rem] mt-[0.25rem]">' +
+                    '<a class="btn btn-ghost btn-xs bg-white/20 hover:bg-white/30 text-white" href="' + escapeHtml(resolved.url || resolved.previewUrl || '#') + '" target="_blank" rel="noopener" title="Open in Google Drive" onclick="event.stopPropagation()">' +
+                    '<i class="fa-solid fa-arrow-up-right-from-square text-[0.6875rem]"></i><span>Drive</span></a>' +
+                    (readonly ? '' : '<button type="button" class="btn btn-ghost btn-xs bg-red-600/80 hover:bg-red-600 text-white" data-upload-remove="' + index + '" title="Delete this revision" onclick="event.stopPropagation()"><i class="fa-solid fa-trash text-[0.6875rem]"></i><span>Delete</span></button>') +
+                    '</div></div>';
+
+                var amountLine = '';
+                if (amount) {
+                    amountLine = '<p class="font-mono text-[0.625rem] font-bold text-[#047857] dark:text-[#10B981]">' + formatRupee(amount) + ' <span class="text-[0.5625rem] font-normal text-[var(--text-muted)]">excl. GST</span></p>';
+                }
+
+                return '<div class="doc-card group relative p-[0.5rem] flex flex-col gap-[0.4rem] rounded-[0.5rem] border border-[var(--border-main)] bg-[var(--bg-card)] hover:border-[var(--accent-blue)] transition-all shadow-sm" data-portrait-file="' + index + '">' +
+                    '<div class="relative w-full h-[240px] rounded-[0.375rem] overflow-hidden bg-[var(--bg-surface-sub)] border border-[var(--border-subtle)] flex items-center justify-center cursor-pointer shadow-inner" data-upload-view="' + index + '" title="Click to preview fullscreen">' +
+                    previewInner +
+                    overlay +
+                    '</div>' +
+                    '<div class="flex flex-col gap-[0.2rem] pt-[0.2rem] px-[0.15rem]">' +
+                    '<div class="flex items-center justify-between gap-[0.5rem]">' +
+                    '<div class="flex items-center gap-[0.35rem] min-w-0 flex-1 cursor-pointer" data-upload-view="' + index + '" title="' + escapeHtml(resolved.name) + '">' +
+                    '<i class="fa-solid ' + icon + ' text-[0.875rem] shrink-0"></i>' +
+                    '<span class="font-mono text-[0.6875rem] font-semibold text-[var(--text-primary)] truncate hover:underline hover:text-[var(--accent-blue)]">' + escapeHtml(resolved.name || 'Attachment') + '</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-[0.2rem] shrink-0">' +
+                    '<button type="button" class="btn btn-ghost btn-xs p-[0.25rem] text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10" data-upload-view="' + index + '" title="Preview fullscreen"><i class="fa-solid fa-eye text-[0.75rem]"></i></button>' +
+                    '<a class="btn btn-ghost btn-xs p-[0.25rem] text-[var(--text-muted)] hover:text-[var(--text-primary)]" href="' + escapeHtml(resolved.url || resolved.previewUrl || '#') + '" target="_blank" rel="noopener" title="Open in Google Drive"><i class="fa-solid fa-arrow-up-right-from-square text-[0.75rem]"></i></a>' +
+                    (readonly ? '' : '<button type="button" class="btn btn-ghost btn-xs p-[0.25rem] text-red-500 hover:bg-red-500/10" data-upload-remove="' + index + '" title="Delete file"><i class="fa-solid fa-trash text-[0.75rem]"></i></button>') +
+                    '</div></div>' +
+                    '<div class="flex items-center justify-between text-[0.5625rem] font-mono text-[var(--text-muted)]">' +
+                    '<span>' + escapeHtml(String(resolved.type || 'file').toUpperCase()) + ' &bull; ' + formatFileSize(resolved.size) + (resolved.uploadedAt ? ' &bull; ' + displayDate(resolved.uploadedAt) : '') + '</span>' +
+                    amountLine +
+                    '</div></div>' +
+                    '</div>';
+            }
+
+            function uploadFileRowHtml(file, docKey, index, readonly, opts) {
+                return uploadFilePortraitCardHtml(file, docKey, index, readonly, opts);
             }
 
             function renderBillsRowsHtml(list, readonly) {
@@ -2573,8 +3139,8 @@
                 var meta = DOC_LABELS[docKey];
                 var readonly = !!options.readonly;
                 var rawFiles = options.files || [];
-                // Each upload slot strictly holds at most 1 file for seamless =INDEX() linking
-                var files = rawFiles.slice(0, 1);
+                // Allow all uploaded files to show in portrait
+                var files = Array.isArray(rawFiles) ? rawFiles : (rawFiles ? [rawFiles] : []);
                 var inputId = idPrefix + '-file-' + docKey;
                 var money = DOC_AMOUNT_KEY[docKey];
 
@@ -2583,7 +3149,7 @@
                     '<div class="flex items-center justify-between gap-[0.35rem]">' +
                     '<span class="font-mono text-[0.75rem] font-bold">' +
                     escapeHtml(meta.label) + '</span>' +
-                    '<span class="chip">' + (files.length ? '1 File' : 'No File') + '</span></div>' +
+                    '<span class="chip">' + (files.length ? (files.length === 1 ? '1 File' : files.length + ' Files') : 'No File') + '</span></div>' +
                     '<p class="font-mono text-[0.6875rem] text-[var(--text-muted)]">' +
                     escapeHtml(meta.hint) + '</p>';
 
@@ -2598,11 +3164,13 @@
                 }
 
                 if (files.length) {
-                    html += '<div class="flex flex-col gap-[0.35rem]">' +
-                        uploadFileRowHtml(files[0], docKey, 0, readonly, { amountEditor: false }) +
+                    html += '<div class="flex flex-col gap-[0.5rem] my-[0.25rem]">' +
+                        files.map(function (file, idx) {
+                            return uploadFilePortraitCardHtml(file, docKey, idx, readonly, { amountEditor: false });
+                        }).join('') +
                         '</div>';
                 } else {
-                    html += '<div class="p-[0.5rem] text-center border border-dashed border-[var(--border-subtle)] rounded-[0.375rem] font-mono text-[0.625rem] text-[var(--text-muted)]">No attachment uploaded yet.</div>';
+                    html += uploadEmptySlotPortraitHtml(docKey, inputId, readonly, options.pickedName);
                 }
 
                 // Progress Box
@@ -3120,6 +3688,12 @@
                 var docKeys = DOC_KEYS[stageKey] || [];
                 var contexts = {};
 
+                if (stageKey === 'po') {
+                    host.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-[0.75rem] items-stretch';
+                } else {
+                    host.className = 'grid grid-cols-1 md:grid-cols-3 gap-[0.75rem] items-stretch';
+                }
+
                 host.innerHTML = docKeys.map(function (docKey) {
                     var moneyKey = uploadAmountKeyFor(docKey);
                     return buildUploadSlotHtml(docKey, 'dt', {
@@ -3344,14 +3918,14 @@
                 if (driveId) {
                     var embedUrl = 'https://drive.google.com/file/d/' + driveId + '/preview';
                     stageEl.innerHTML =
-                        '<div class="relative w-full ' + minH + ' flex flex-col items-center justify-center bg-[var(--bg-surface-sub)] rounded-[0.375rem] overflow-hidden">' +
+                        '<div class="relative w-full max-w-[850px] mx-auto ' + minH + ' flex flex-col items-center justify-center bg-[var(--bg-surface-sub)] rounded-[0.375rem] shadow-xl overflow-hidden border border-[var(--border-main)]">' +
                         '<iframe src="' + escapeHtml(embedUrl) + '" class="w-full h-full border-0 relative z-10 rounded-[0.375rem]" allow="autoplay"></iframe>' +
                         '</div>';
                     return;
                 }
 
                 if (url) {
-                    stageEl.innerHTML = '<iframe src="' + escapeHtml(url) + '" class="w-full ' + minH + ' border-0 rounded-[0.375rem]" allow="autoplay"></iframe>';
+                    stageEl.innerHTML = '<div class="relative w-full max-w-[850px] mx-auto ' + minH + ' flex flex-col items-center justify-center bg-[var(--bg-surface-sub)] rounded-[0.375rem] shadow-xl overflow-hidden border border-[var(--border-main)]"><iframe src="' + escapeHtml(url) + '" class="w-full h-full border-0 rounded-[0.375rem]" allow="autoplay"></iframe></div>';
                     return;
                 }
 
@@ -3513,12 +4087,13 @@
                 return haystack.indexOf(needle) > -1;
             }
 
-            function emptyRow(colspan, message) {
+            function emptyRow(colspan, message, showDemoBtn) {
                 return '<tr><td colspan="' + colspan + '" class="py-[3rem] text-center">' +
-                    '<div class="flex flex-col items-center gap-[0.35rem]">' +
+                    '<div class="flex flex-col items-center gap-[0.5rem]">' +
                     '<span class="material-symbols-outlined text-[1.75rem] text-[var(--text-faint)]">inbox</span>' +
-                    '<span class="font-mono text-[0.6875rem] text-[var(--text-muted)]">' + escapeHtml(message) +
-                    '</span></div></td></tr>';
+                    '<span class="font-mono text-[0.6875rem] text-[var(--text-muted)]">' + escapeHtml(message) + '</span>' +
+                    (showDemoBtn ? '<button type="button" class="btn btn-primary btn-xs mt-[0.25rem] inline-flex items-center gap-[0.35rem]" data-action="load-demo"><i class="fa-solid fa-wand-magic-sparkles text-[0.75rem]"></i> Load Demo Data</button>' : '') +
+                    '</div></td></tr>';
             }
 
             function filteredMasterRows() {
@@ -3540,12 +4115,13 @@
 
             function masterRowHtml(record, index) {
                 return '<tr class="hover:bg-[var(--bg-surface-sub)] transition-colors">' +
-                    '<td class="px-[0.25rem] py-[0.5rem] text-center text-[var(--text-muted)] truncate">' + (index + 1) + '</td>' +
-                    '<td class="px-[0.5rem] py-[0.5rem] text-[var(--text-muted)] truncate" title="' + escapeHtml(record.id || '') + '">' +
-                    escapeHtml(record.id || '\u2014') + '</td>' +
+                    '<td class="px-[0.25rem] py-[0.5rem] text-center text-[var(--text-muted)] truncate" title="' + escapeHtml(record.id || '') + '">' + (index + 1) + '</td>' +
                     '<td class="px-[0.5rem] py-[0.5rem] truncate">' + displayDate(record.date) + '</td>' +
-                    '<td class="px-[0.5rem] py-[0.5rem] font-semibold truncate" title="' + escapeHtml(record.site || '') + '">' + escapeHtml(record.site || '\u2014') + '</td>' +
-                    '<td class="px-[0.5rem] py-[0.5rem] truncate" title="' + escapeHtml(record.vendor || '') + '">' + escapeHtml(record.vendor || '\u2014') + '</td>' +
+                    '<td class="px-[0.5rem] py-[0.35rem]">' +
+                    '<div class="font-bold text-[var(--text-primary)] truncate text-[0.75rem]" title="' + escapeHtml(record.site || '') + '">' + escapeHtml(record.site || '\u2014') + '</div>' +
+                    '<div class="text-[0.6875rem] text-[var(--text-muted)] truncate flex items-center gap-[0.25rem] mt-[0.1rem]" title="' + escapeHtml(record.vendor || '') + '">' +
+                    '<i class="fa-solid fa-store text-[0.5625rem] opacity-60"></i><span>' + escapeHtml(record.vendor || '\u2014') + '</span></div>' +
+                    '</td>' +
                     locationCellHtml(record.location) +
                     '<td class="px-[0.5rem] py-[0.5rem] truncate" title="' + escapeHtml(record.variant || '') + '">' + escapeHtml(record.variant || '\u2014') + '</td>' +
                     '<td class="px-[0.5rem] py-[0.5rem] truncate" title="' + escapeHtml(record.mesh || '') + '">' + escapeHtml(record.mesh || '\u2014') + '</td>' +
@@ -3555,7 +4131,7 @@
                     docCellHtml(record, 'roughSizes') +
                     uploadsAmountsCellHtml(record, 'master') +
                     '<td class="px-[0.5rem] py-[0.5rem]"><div class="flex items-center justify-center gap-[0.2rem] flex-wrap">' +
-                    '<button type="button" class="btn btn-ghost btn-xs px-[0.35rem]" data-open="' + escapeHtml(record.id) + '" title="Open record">' +
+                    '<button type="button" class="btn btn-ghost btn-xs px-[0.35rem]" data-open="' + escapeHtml(record.id) + '" title="Open ' + escapeHtml(record.id || 'record') + '">' +
                     '<span class="material-symbols-outlined text-[0.875rem]">open_in_new</span></button>' +
                     '<button type="button" class="btn btn-success btn-xs px-[0.4rem]" data-won="' + escapeHtml(record.id) + '" title="Convert to Purchase Order">Create PO</button>' +
                     '</div></td></tr>';
@@ -3567,7 +4143,7 @@
                 tbody.innerHTML = '';
 
                 if (isInitialDataLoading) {
-                    tbody.innerHTML = emptyRow(14, 'Loading Section 1 from Google Sheets...');
+                    tbody.innerHTML = emptyRow(12, 'Loading Section 1 from Google Sheets...');
                     return;
                 }
 
@@ -3575,9 +4151,12 @@
                 $('masterFilterCount').textContent = rows.length + ' shown';
 
                 if (!rows.length) {
-                    tbody.innerHTML = emptyRow(14, recordsFor('master').length
-                        ? 'No inquiries match the current filters.'
-                        : 'No active inquiries yet. Use "+ New Quotation" to add the first row.');
+                    var isMasterEmpty = !recordsFor('master').length;
+                    tbody.innerHTML = emptyRow(12, isMasterEmpty
+                        ? 'No active inquiries yet. Use "+ New Quotation" or click below to populate sample demo data.'
+                        : 'No inquiries match the current filters.',
+                        isMasterEmpty);
+                    wireRowActions(tbody);
                     return;
                 }
 
@@ -3586,6 +4165,9 @@
             }
 
             function wireRowActions(tbody) {
+                tbody.querySelectorAll('[data-action="load-demo"]').forEach(function (btn) {
+                    btn.addEventListener('click', function () { loadDemoData(true); });
+                });
                 tbody.querySelectorAll('[data-open]').forEach(function (btn) {
                     btn.addEventListener('click', function () {
                         var stage = btn.getAttribute('data-stage') || 'master';
@@ -3638,7 +4220,7 @@
                 if (!tbody) return;
 
                 if (isInitialDataLoading) {
-                    tbody.innerHTML = emptyRow(13, 'Loading Section 2 from Google Sheets...');
+                    tbody.innerHTML = emptyRow(11, 'Loading Section 2 from Google Sheets...');
                     return;
                 }
 
@@ -3646,17 +4228,21 @@
                 $('poFilterCount').textContent = rows.length + ' shown';
 
                 if (!rows.length) {
-                    tbody.innerHTML = emptyRow(13, recordsFor('po').length
-                        ? 'No purchase orders match the current filters.'
-                        : 'No active purchase orders. Convert a quotation to create a PO.');
+                    var isPoEmpty = !recordsFor('po').length;
+                    tbody.innerHTML = emptyRow(11, isPoEmpty
+                        ? 'No active purchase orders. Convert a quotation or click below to load demo data.'
+                        : 'No purchase orders match the current filters.',
+                        isPoEmpty);
+                    wireRowActions(tbody);
                 } else {
                     tbody.innerHTML = rows.map(function (record) {
                         return '<tr class="hover:bg-[var(--bg-surface-sub)] transition-colors">' +
-                            '<td class="px-[0.5rem] py-[0.5rem] truncate">' + displayDate(record.date) + '</td>' +
-                            '<td class="px-[0.5rem] py-[0.5rem] text-[var(--text-muted)] truncate" title="' + escapeHtml(record.id || '') + '">' +
-                            escapeHtml(record.id || '\u2014') + '</td>' +
-                            '<td class="px-[0.5rem] py-[0.5rem] font-semibold truncate" title="' + escapeHtml(record.site || '') + '">' + escapeHtml(record.site || '\u2014') + '</td>' +
-                            '<td class="px-[0.5rem] py-[0.5rem] truncate" title="' + escapeHtml(record.vendor || '') + '">' + escapeHtml(record.vendor || '\u2014') + '</td>' +
+                            '<td class="px-[0.5rem] py-[0.5rem] truncate" title="' + escapeHtml(record.id || '') + '">' + displayDate(record.date) + '</td>' +
+                            '<td class="px-[0.5rem] py-[0.35rem]">' +
+                            '<div class="font-bold text-[var(--text-primary)] truncate text-[0.75rem]" title="' + escapeHtml(record.site || '') + '">' + escapeHtml(record.site || '\u2014') + '</div>' +
+                            '<div class="text-[0.6875rem] text-[var(--text-muted)] truncate flex items-center gap-[0.25rem] mt-[0.1rem]" title="' + escapeHtml(record.vendor || '') + '">' +
+                            '<i class="fa-solid fa-store text-[0.5625rem] opacity-60"></i><span>' + escapeHtml(record.vendor || '\u2014') + '</span></div>' +
+                            '</td>' +
                             locationCellHtml(record.location) +
                             '<td class="px-[0.5rem] py-[0.5rem] truncate" title="' + escapeHtml(record.variant || '') + '">' + escapeHtml(record.variant || '\u2014') + '</td>' +
                             '<td class="px-[0.5rem] py-[0.5rem] truncate" title="' + escapeHtml(record.mesh || '') + '">' + escapeHtml(record.mesh || '\u2014') + '</td>' +
@@ -3667,7 +4253,7 @@
                             uploadsAmountsCellHtml(record, 'po') +
                             '<td class="px-[0.5rem] py-[0.5rem]"><div class="flex items-center justify-center gap-[0.25rem] flex-wrap">' +
                             '<button type="button" class="btn btn-ghost btn-xs px-[0.35rem]" data-stage="po" data-open="' +
-                            escapeHtml(record.id) + '" title="Manage PO">' +
+                            escapeHtml(record.id) + '" title="Manage PO ' + escapeHtml(record.id || '') + '">' +
                             '<span class="material-symbols-outlined text-[0.875rem]">tune</span></button>' +
                             '</div></td></tr>';
                     }).join('');
@@ -4302,6 +4888,9 @@
 
                 $('btnAnalytics').addEventListener('click', function () { switchStage('analytics'); });
                 $('btnHeaderSync').addEventListener('click', function () { reloadFromServer(false); });
+                if ($('btnDemoData')) {
+                    $('btnDemoData').addEventListener('click', function () { loadDemoData(false); });
+                }
 
                 var btnFullscreen = $('btnFullscreen');
                 if (btnFullscreen) {

@@ -154,6 +154,7 @@ function onOpen() {
       .addItem('\uD83D\uDDA5\uFE0F Open Web App Portal', 'showWebAppDialog')
       .addSeparator()
       .addItem('\uD83D\uDD27 Initialize / Repair Database', 'initDatabase')
+      .addItem('\uD83D\uDCE5 Seed Demo Data (Sample Quotations & POs)', 'seedDemoData')
       .addItem('\uD83D\uDD04 Sync Document Links to FMS Sheets (uPVC PO & Quotation)', 'syncAllDocLinksToAllSheets')
       .addItem('\uD83D\uDD17 Convert All Document Cells to Clickable Links', 'migrateAllDocsToRichText')
       .addItem('\uD83C\uDD94 Repair Legacy Data (Backfill IDs)', 'repairLegacyIds')
@@ -2104,4 +2105,522 @@ function syncAllDocLinksToAllSheets(silent) {
   }
 
   return { success: true, totalUpdated: totalUpdated, sheetsUpdated: sheetsUpdated };
+}
+
+/* ==========================================================================
+ * DEMO DATA SEEDER
+ * ======================================================================== */
+
+/**
+ * Seeds realistic sample records into uPVC_Quotation_Master and uPVC_Purchase_Order_Master.
+ */
+function seedDemoData() {
+  return withLock_(function () {
+    ensureSchema_();
+    var demoQuotes = getSampleQuotations_();
+    demoQuotes.forEach(function (q) {
+      upsertRow_(SHEET.QUOTATION_MASTER, q, q.id);
+    });
+
+    var demoPOs = getSamplePOs_();
+    demoPOs.forEach(function (p) {
+      upsertRow_(SHEET.PO_MASTER, p, p.id);
+    });
+
+    SpreadsheetApp.flush();
+    try {
+      SpreadsheetApp.getActiveSpreadsheet().toast(
+        'Demo data inserted: ' + demoQuotes.length + ' Quotes & ' + demoPOs.length + ' POs',
+        'uPVC FMS',
+        5
+      );
+    } catch (e) { }
+
+    return {
+      success: true,
+      quotationsCount: demoQuotes.length,
+      poCount: demoPOs.length
+    };
+  });
+}
+
+function getSampleQuotations_() {
+  return [
+    {
+      id: 'QT-UPVC-0001',
+      site: 'Prestige Falcon City - Tower 4',
+      date: '2026-10-14',
+      location: 'Kanakapura Road, Bengaluru',
+      vendor: 'NCL',
+      variant: '3-Track Sliding',
+      mesh: 'SS 304 Mesh',
+      glass: '6mm, Clear, Toughened',
+      qty: 14,
+      leadTime: 15,
+      roughSizes: [
+        {
+          id: 'demo_dwg_01',
+          name: 'Tower4_Window_Schedule.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 348160,
+          uploadedAt: '2026-10-14 09:30'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_vq_01',
+          name: 'NCL_Quote_Ref_9821.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 184320,
+          amount: 210000,
+          uploadedAt: '2026-10-15 11:20'
+        }
+      ],
+      vendorAmount: 210000,
+      ourQuote: [
+        {
+          id: 'demo_oq_01',
+          name: 'Quotation_PFC_Tower4_Final.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 225280,
+          amount: 285000,
+          uploadedAt: '2026-10-15 17:00'
+        }
+      ],
+      ourAmount: 285000
+    },
+    {
+      id: 'QT-UPVC-0002',
+      site: 'Oberoi Sky City - Penthouse B',
+      date: '2026-10-15',
+      location: 'Borivali East, Western Express Hwy, Mumbai',
+      vendor: 'Prominance',
+      variant: 'Casement / Openable, Sliding Folding',
+      mesh: 'Pleated Mesh',
+      glass: 'DGU (Double Glazed), 6mm, Clear, Toughened',
+      qty: 22,
+      leadTime: 21,
+      roughSizes: [
+        {
+          id: 'demo_dwg_02',
+          name: 'Penthouse_Glazing_Layout.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 460800,
+          uploadedAt: '2026-10-15 10:15'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_vq_02',
+          name: 'Prominance_UPVC_Special_Fab.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 317440,
+          amount: 480000,
+          uploadedAt: '2026-10-16 14:00'
+        }
+      ],
+      vendorAmount: 480000,
+      ourQuote: [
+        {
+          id: 'demo_oq_02',
+          name: 'Oberoi_SkyCity_Client_Proposal.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 266240,
+          amount: 640000,
+          uploadedAt: '2026-10-16 18:30'
+        }
+      ],
+      ourAmount: 640000
+    },
+    {
+      id: 'QT-UPVC-0003',
+      site: 'Sobha Dream Acres - Villa 58',
+      date: '2026-10-16',
+      location: 'Panathur Road, Balagere, Bengaluru',
+      vendor: 'Grayzo',
+      variant: '2.5-Track Sliding',
+      mesh: 'Fiberglass Mesh',
+      glass: '5mm, Clear, Toughened',
+      qty: 9,
+      leadTime: 12,
+      roughSizes: [
+        {
+          id: 'demo_dwg_03',
+          name: 'Villa58_Site_Measurements.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 194560,
+          uploadedAt: '2026-10-16 12:45'
+        }
+      ],
+      vendorQuote: [],
+      vendorAmount: 0,
+      ourQuote: [],
+      ourAmount: 0
+    },
+    {
+      id: 'QT-UPVC-0004',
+      site: 'Greenfield Commercial Hub - Wing B',
+      date: '2026-10-17',
+      location: 'Hitec City, Phase 2, Hyderabad',
+      vendor: 'Alumil',
+      variant: 'Fix-Light, Ventilator',
+      mesh: 'None',
+      glass: '10mm, Clear, Toughened',
+      qty: 36,
+      leadTime: 25,
+      roughSizes: [
+        {
+          id: 'demo_dwg_04',
+          name: 'Facade_Window_Specs_WingB.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 532480,
+          uploadedAt: '2026-10-17 09:00'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_vq_04',
+          name: 'Alumil_Commercial_Costing.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 286720,
+          amount: 560000,
+          uploadedAt: '2026-10-17 15:30'
+        }
+      ],
+      vendorAmount: 560000,
+      ourQuote: [
+        {
+          id: 'demo_oq_04',
+          name: 'Greenfield_Approved_Commercial_Offer.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 296960,
+          amount: 720000,
+          uploadedAt: '2026-10-18 11:00'
+        }
+      ],
+      ourAmount: 720000
+    },
+    {
+      id: 'QT-UPVC-0005',
+      site: 'Palm Meadows Estate - Villa 14',
+      date: '2026-10-18',
+      location: 'Airport Road, Yelahanka, Bengaluru',
+      vendor: 'WinFrame',
+      variant: 'Door Frames, 2-Track Sliding',
+      mesh: 'SS 304 Mesh',
+      glass: 'Frosted / Obscure, 5mm, Clear, Toughened',
+      qty: 16,
+      leadTime: 14,
+      roughSizes: [
+        {
+          id: 'demo_dwg_05',
+          name: 'Villa14_Opening_Schedule.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 215040,
+          uploadedAt: '2026-10-18 14:20'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_vq_05',
+          name: 'WinFrame_UPVC_Quotation.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 179200,
+          amount: 195000,
+          uploadedAt: '2026-10-18 16:50'
+        }
+      ],
+      vendorAmount: 195000,
+      ourQuote: [],
+      ourAmount: 0
+    }
+  ];
+}
+
+function getSamplePOs_() {
+  return [
+    {
+      id: 'PO-UPVC-0001',
+      quotationId: 'QT-UPVC-0006',
+      site: 'Grand Hyatt Residences - Tower A',
+      date: '2026-10-02',
+      location: 'Bandra Kurla Complex, Mumbai',
+      vendor: 'Prominance',
+      variant: '3-Track Sliding, Ventilator',
+      mesh: 'SS 304 Mesh',
+      glass: '6mm, Clear, Toughened, DGU (Double Glazed)',
+      qty: 28,
+      leadTime: 18,
+      roughSizes: [
+        {
+          id: 'demo_po_dwg_01',
+          name: 'Hyatt_TowerA_Approved_DWG.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 491520,
+          uploadedAt: '2026-10-02 09:15'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_po_vq_01',
+          name: 'Prominance_Final_Billing_Quote.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 215040,
+          amount: 520000,
+          uploadedAt: '2026-10-02 12:30'
+        }
+      ],
+      vendorAmount: 520000,
+      ourQuote: [
+        {
+          id: 'demo_po_oq_01',
+          name: 'Client_Contract_Hyatt_Signed.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 358400,
+          amount: 695000,
+          uploadedAt: '2026-10-03 14:00'
+        }
+      ],
+      ourAmount: 695000,
+      poOrder: [
+        {
+          id: 'demo_po_doc_01',
+          name: 'Official_PO_HYATT_001.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 296960,
+          uploadedAt: '2026-10-04 10:00'
+        }
+      ],
+      bills: [
+        { date: '2026-10-08', invoiceNo: 'INV-PRM-1044', amount: 260000 },
+        { date: '2026-10-15', invoiceNo: 'INV-PRM-1089', amount: 260000 }
+      ],
+      billsAmt: 520000
+    },
+    {
+      id: 'PO-UPVC-0002',
+      quotationId: 'QT-UPVC-0007',
+      site: 'Embassy Boulevard - Luxury Villa 19',
+      date: '2026-10-06',
+      location: 'Bellary Road, Yelahanka, Bengaluru',
+      vendor: 'NCL',
+      variant: 'Casement / Openable',
+      mesh: 'Pleated Mesh',
+      glass: '5mm, Clear, Toughened',
+      qty: 15,
+      leadTime: 14,
+      roughSizes: [
+        {
+          id: 'demo_po_dwg_02',
+          name: 'Villa19_Elevation_CAD.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 317440,
+          uploadedAt: '2026-10-06 11:00'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_po_vq_02',
+          name: 'NCL_Revised_Quote_772.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 194560,
+          amount: 240000,
+          uploadedAt: '2026-10-06 15:40'
+        }
+      ],
+      vendorAmount: 240000,
+      ourQuote: [
+        {
+          id: 'demo_po_oq_02',
+          name: 'Client_Invoice_Quote_EB19.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 209920,
+          amount: 320000,
+          uploadedAt: '2026-10-07 10:15'
+        }
+      ],
+      ourAmount: 320000,
+      poOrder: [
+        {
+          id: 'demo_po_doc_02',
+          name: 'PO_NCL_EB19_Signed.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 184320,
+          uploadedAt: '2026-10-07 14:00'
+        }
+      ],
+      bills: [
+        { date: '2026-10-12', invoiceNo: 'INV-NCL-992', amount: 120000 }
+      ],
+      billsAmt: 120000
+    },
+    {
+      id: 'PO-UPVC-0003',
+      quotationId: '',
+      site: 'Brigade Gateway Commercial Block',
+      date: '2026-10-10',
+      location: 'Rajajinagar, Malleshwaram, Bengaluru',
+      vendor: 'Alumil',
+      variant: 'Sliding Folding',
+      mesh: 'SS 304 Mesh',
+      glass: '10mm, Clear, Toughened',
+      qty: 8,
+      leadTime: 20,
+      roughSizes: [
+        {
+          id: 'demo_po_dwg_03',
+          name: 'Direct_PO_Site_Specs.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 286720,
+          uploadedAt: '2026-10-10 10:00'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_po_vq_03',
+          name: 'Alumil_Direct_Price_Agreed.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 163840,
+          amount: 380000,
+          uploadedAt: '2026-10-10 12:00'
+        }
+      ],
+      vendorAmount: 380000,
+      ourQuote: [
+        {
+          id: 'demo_po_oq_03',
+          name: 'Brigade_Gate_Contract.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 225280,
+          amount: 490000,
+          uploadedAt: '2026-10-10 16:00'
+        }
+      ],
+      ourAmount: 490000,
+      poOrder: [
+        {
+          id: 'demo_po_doc_03',
+          name: 'PO_BrigadeGateway_Signed.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 235520,
+          uploadedAt: '2026-10-11 11:30'
+        }
+      ],
+      bills: [],
+      billsAmt: 0
+    },
+    {
+      id: 'PO-UPVC-0004',
+      quotationId: 'QT-UPVC-0008',
+      site: 'Godrej Woods Phase 1',
+      date: '2026-10-12',
+      location: 'Sector 43, Noida, NCR',
+      vendor: 'Poonam Alu.',
+      variant: '2-Track Sliding',
+      mesh: 'Fiberglass Mesh',
+      glass: '5mm, Clear, Toughened',
+      qty: 40,
+      leadTime: 16,
+      roughSizes: [
+        {
+          id: 'demo_po_dwg_04',
+          name: 'Godrej_UnitPlans_AllWindows.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 634880,
+          uploadedAt: '2026-10-12 09:40'
+        }
+      ],
+      vendorQuote: [
+        {
+          id: 'demo_po_vq_04',
+          name: 'Poonam_Bulk_Pricing.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 220160,
+          amount: 410000,
+          uploadedAt: '2026-10-12 14:10'
+        }
+      ],
+      vendorAmount: 410000,
+      ourQuote: [
+        {
+          id: 'demo_po_oq_04',
+          name: 'Our_Approved_Offer_GW1.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 245760,
+          amount: 535000,
+          uploadedAt: '2026-10-13 11:20'
+        }
+      ],
+      ourAmount: 535000,
+      poOrder: [
+        {
+          id: 'demo_po_doc_04',
+          name: 'Official_PO_Godrej_Woods.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          type: 'pdf',
+          size: 199680,
+          uploadedAt: '2026-10-13 15:30'
+        }
+      ],
+      bills: [
+        { date: '2026-10-16', invoiceNo: 'INV-PA-3021', amount: 205000 }
+      ],
+      billsAmt: 205000
+    }
+  ];
 }
