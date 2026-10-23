@@ -1,0 +1,2724 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="upvcFmsApp">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>uPVC FMS &mdash; Quotation &amp; Procurement Portal</title>
+
+    <!-- Typography & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Mozilla PDF.js for in-app preview -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { 'brand-blue': '#2563EB', 'brand-green': '#10B981' }
+                }
+            }
+        };
+    </script>
+
+    <!-- AngularJS 1.8.3 Core + Sanitize -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular-sanitize.min.js"></script>
+
+    <style data-purpose="theme-variables">
+        :root {
+            --bg-app: #F8FAFC;
+            --bg-panel: #FFFFFF;
+            --bg-header: #FFFFFF;
+            --bg-surface-sub: #F1F5F9;
+            --bg-input: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-table-head: #F8FAFC;
+            --bg-table-body: #FFFFFF;
+            --bg-status: #FFFFFF;
+            --border-main: #CBD5E1;
+            --border-subtle: #E2E8F0;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --text-faint: #94A3B8;
+            --accent-cyan: #0891B2;
+            --accent-blue: #2563EB;
+        }
+
+        html.dark {
+            --bg-app: #0B0F19;
+            --bg-panel: #0F172A;
+            --bg-header: #0B0F19;
+            --bg-surface-sub: #111827;
+            --bg-input: #0B0F19;
+            --bg-card: #111827;
+            --bg-table-head: #111827;
+            --bg-table-body: #0F172A;
+            --bg-status: #0B0F19;
+            --border-main: #1F2937;
+            --border-subtle: #1F2937;
+            --text-primary: #E2E8F0;
+            --text-secondary: #CBD5E1;
+            --text-muted: #94A3B8;
+            --text-faint: #64748B;
+            --accent-cyan: #22D3EE;
+            --accent-blue: #3B82F6;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-app);
+            box-sizing: border-box;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            color: var(--text-primary);
+        }
+
+        /* Angular Cloak */
+        [ng\:cloak],
+        [ng-cloak],
+        [data-ng-cloak],
+        [x-ng-cloak],
+        .ng-cloak,
+        .x-ng-cloak {
+            display: none !important;
+        }
+
+        /* Custom Scrollbars */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 0.375rem;
+            height: 0.375rem;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--bg-surface-sub);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--border-main);
+            border-radius: 0.25rem;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .theme-bg-app {
+            background-color: var(--bg-app);
+        }
+
+        .theme-bg-panel {
+            background-color: var(--bg-panel);
+        }
+
+        .theme-bg-header {
+            background-color: var(--bg-header);
+        }
+
+        .theme-bg-card {
+            background-color: var(--bg-card);
+        }
+
+        .theme-bg-table-head {
+            background-color: var(--bg-table-head);
+        }
+
+        .theme-bg-table-body {
+            background-color: var(--bg-table-body);
+        }
+
+        .theme-bg-status {
+            background-color: var(--bg-status);
+        }
+
+        /* Form Inputs */
+        .theme-input {
+            width: 100%;
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+            line-height: 1.25rem;
+            border-radius: 0.375rem;
+            border: 0.0625rem solid var(--border-main);
+            background-color: var(--bg-input);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            box-sizing: border-box;
+        }
+
+        .theme-input:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 0.125rem rgba(37, 99, 235, 0.2);
+        }
+
+        .theme-input:disabled,
+        .theme-input[readonly] {
+            opacity: 0.7;
+            background-color: var(--bg-surface-sub);
+            cursor: not-allowed;
+        }
+
+        .field-label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.02em;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            border: 0.0625rem solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-xs {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.6875rem;
+        }
+
+        .btn-primary {
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border-color: #1D4ED8;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1D4ED8;
+        }
+
+        .btn-success {
+            background-color: #10B981;
+            color: #FFFFFF;
+            border-color: #059669;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: #059669;
+        }
+
+        .btn-danger {
+            background-color: #EF4444;
+            color: #FFFFFF;
+            border-color: #DC2626;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: #DC2626;
+        }
+
+        .btn-ghost {
+            background-color: transparent;
+            border-color: var(--border-main);
+            color: var(--text-primary);
+        }
+
+        .btn-ghost:hover:not(:disabled) {
+            background-color: var(--bg-surface-sub);
+        }
+
+        /* Stage Navigation Tabs */
+        .stage-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 0.0625rem solid transparent;
+            color: var(--text-muted);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .stage-tab:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-surface-sub);
+        }
+
+        .stage-tab.active-stage {
+            background-color: var(--bg-panel);
+            color: #2563EB;
+            border-color: var(--border-main);
+            box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.05);
+        }
+
+        html.dark .stage-tab.active-stage {
+            color: #60A5FA;
+        }
+
+        .stage-step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 9999px;
+            background-color: var(--border-main);
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            font-weight: 700;
+        }
+
+        .stage-tab.active-stage .stage-step-num {
+            background-color: #2563EB;
+            color: #FFFFFF;
+        }
+
+        .stage-count-pill {
+            padding: 0.05rem 0.35rem;
+            border-radius: 9999px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            font-weight: 700;
+            background-color: var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .stage-tab.active-stage .stage-count-pill {
+            background-color: rgba(37, 99, 235, 0.15);
+            color: #2563EB;
+        }
+
+        html.dark .stage-tab.active-stage .stage-count-pill {
+            color: #93C5FD;
+        }
+
+        /* Chips & Badges */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 0.0625rem solid var(--border-main);
+            background-color: var(--bg-surface-sub);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .chip-doc {
+            border-color: #6366F1;
+            color: #4F46E5;
+            background-color: rgba(99, 102, 241, 0.10);
+        }
+
+        .chip-amt {
+            border-color: #10B981;
+            color: #047857;
+            background-color: rgba(16, 185, 129, 0.10);
+        }
+
+        .chip-won {
+            border-color: #10B981;
+            color: #047857;
+            background-color: rgba(16, 185, 129, 0.12);
+        }
+
+        .chip-lost {
+            border-color: #EF4444;
+            color: #B91C1C;
+            background-color: rgba(239, 68, 68, 0.12);
+        }
+
+        .chip-id {
+            border-color: #06B6D4;
+            color: #0E7490;
+            background-color: rgba(6, 182, 212, 0.12);
+        }
+
+        .chip-empty {
+            opacity: 0.55;
+            border-style: dashed;
+        }
+
+        html.dark .chip-doc {
+            color: #A5B4FC;
+        }
+
+        html.dark .chip-amt,
+        html.dark .chip-won {
+            color: #6EE7B7;
+        }
+
+        html.dark .chip-lost {
+            color: #FCA5A5;
+        }
+
+        html.dark .chip-id {
+            color: #67E8F9;
+        }
+
+        /* Stat Card */
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 0.0625rem solid var(--border-main);
+            border-radius: 0.5rem;
+            padding: 0.75rem 0.875rem;
+        }
+
+        .stat-card .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.5625rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .stat-card .stat-value {
+            margin-top: 0.35rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        .stat-card .stat-note {
+            margin-top: 0.25rem;
+            font-size: 0.625rem;
+            color: var(--text-muted);
+        }
+
+        /* Modal Dialogs */
+        .modal-shell {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            padding: 1rem;
+        }
+
+        .modal-card {
+            background-color: var(--bg-panel);
+            border: 0.0625rem solid var(--border-main);
+            border-radius: 0.75rem;
+            box-shadow: 0 1.25rem 2.5rem rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 2rem);
+            overflow: hidden;
+            animation: modalFadeIn 0.15s ease-out;
+        }
+
+        .modal-card.is-maximized {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .spin {
+            animation: spinAnim 0.8s linear infinite;
+        }
+
+        @keyframes spinAnim {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Drag & Drop Visual Indicator */
+        .file-drop-area {
+            border: 0.0625rem dashed var(--border-main);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            background-color: var(--bg-surface-sub);
+            transition: all 0.15s ease;
+        }
+
+        .file-drop-area.drag-over {
+            border-color: #2563EB;
+            background-color: rgba(37, 99, 235, 0.08);
+        }
+    </style>
+</head>
+
+<body class="theme-bg-app text-[var(--text-primary)] transition-colors duration-200" ng-controller="MainCtrl" ng-cloak>
+
+    <div class="h-full flex flex-col">
+
+        <!-- HEADER -->
+        <header
+            class="theme-bg-header fixed top-0 left-0 right-0 h-[3.5rem] z-40 border-b border-[var(--border-main)] flex items-center justify-between px-[1rem] gap-[0.5rem] transition-colors duration-200 max-w-full overflow-hidden">
+
+            <div class="flex items-center gap-[0.75rem] h-full min-w-0 overflow-x-auto no-scrollbar flex-shrink">
+                <div class="flex items-center gap-[0.5rem] shrink-0 cursor-pointer" ng-click="switchStage('master')">
+                    <div
+                        class="w-[2.25rem] h-[2.25rem] rounded-[0.45rem] bg-[#2563EB] text-white border border-blue-400/30 flex items-center justify-center font-bold">
+                        <span class="material-symbols-outlined text-[1.25rem]">window</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span
+                            class="font-mono text-[0.875rem] font-bold text-[var(--text-primary)] tracking-wide whitespace-nowrap leading-none">uPVC
+                            FMS</span>
+                        <span
+                            class="text-[0.5625rem] font-mono text-[var(--text-muted)] tracking-wider leading-none mt-[0.2rem] uppercase font-semibold">Quotation
+                            &amp; Procurement</span>
+                    </div>
+                </div>
+
+                <div class="h-[1.5rem] w-[0.0625rem] bg-[var(--border-main)] shrink-0 hidden xl:block"></div>
+
+                <!-- Navigation Tabs -->
+                <nav id="stageTabsNav"
+                    class="flex items-center gap-[0.25rem] p-[0.2rem] rounded-[0.5rem] bg-[var(--bg-surface-sub)] border border-[var(--border-main)] shrink-0 overflow-x-auto no-scrollbar">
+
+                    <button type="button" class="stage-tab" ng-class="{'active-stage': activeStage === 'master'}"
+                        ng-click="switchStage('master')" title="Section 1: uPVC_Quotation_Master - Active Inquiries">
+                        <span class="stage-step-num">1</span>
+                        <i class="stage-icon fa-solid fa-file-invoice"></i>
+                        <span class="stage-title">Quotation Master</span>
+                        <span class="stage-count-pill">{{ db.master.length || 0 }}</span>
+                    </button>
+
+                    <i
+                        class="fa-solid fa-chevron-right text-[0.55rem] text-[var(--border-subtle)] shrink-0 opacity-50"></i>
+
+                    <button type="button" class="stage-tab" ng-class="{'active-stage': activeStage === 'po'}"
+                        ng-click="switchStage('po')" title="Section 2: uPVC_Purchase_Order_Master - Execution">
+                        <span class="stage-step-num">2</span>
+                        <i class="stage-icon fa-solid fa-cart-flatbed"></i>
+                        <span class="stage-title">Purchase Orders</span>
+                        <span class="stage-count-pill">{{ db.po.length || 0 }}</span>
+                    </button>
+
+                    <i
+                        class="fa-solid fa-chevron-right text-[0.55rem] text-[var(--border-subtle)] shrink-0 opacity-50"></i>
+
+                    <button type="button" class="stage-tab" ng-class="{'active-stage': activeStage === 'config'}"
+                        ng-click="switchStage('config')" title="Section 3: uPVC_Config_Dropdowns - Central lookups">
+                        <span class="stage-step-num">3</span>
+                        <i class="stage-icon fa-solid fa-sliders"></i>
+                        <span class="stage-title">Config</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Controls Right -->
+            <div class="flex items-center gap-[0.5rem] shrink-0">
+                <button type="button" class="btn btn-ghost px-[0.5rem] text-amber-600 dark:text-amber-400"
+                    ng-click="loadDemoData()" title="Load Sample Demo Data">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[0.875rem]"></i>
+                    <span class="font-mono text-[0.6875rem] hidden xl:inline">Demo Data</span>
+                </button>
+
+                <button type="button" class="btn btn-ghost px-[0.5rem]" ng-click="syncSheetData()"
+                    title="Sync Latest Changes from Google Sheet">
+                    <i class="fa-solid fa-rotate text-[0.875rem] text-[#10B981]"></i>
+                    <span class="font-mono text-[0.6875rem] hidden xl:inline">Sync Sheet</span>
+                </button>
+
+                <button type="button" class="btn btn-ghost px-[0.5rem]" ng-click="switchStage('analytics')"
+                    ng-class="{'active-stage': activeStage === 'analytics'}" title="Pipeline Analytics">
+                    <i class="fa-solid fa-chart-simple text-[0.875rem] text-[var(--accent-cyan)]"></i>
+                </button>
+
+                <div class="relative flex items-center w-[8rem] sm:w-[11rem] md:w-[14rem]">
+                    <span
+                        class="material-symbols-outlined absolute left-[0.5rem] text-[var(--text-muted)] text-[1rem]">search</span>
+                    <input type="text" ng-model="filters.search" autocomplete="off"
+                        class="theme-input placeholder:text-[var(--text-faint)]"
+                        style="padding-left:1.75rem; padding-right:1.5rem;" placeholder="Search site, ID, vendor..." />
+                    <button type="button" ng-show="filters.search" ng-click="filters.search = ''"
+                        class="absolute right-[0.4rem] text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                        <span class="material-symbols-outlined text-[0.875rem]">close</span>
+                    </button>
+                </div>
+
+                <button type="button" class="btn btn-ghost px-[0.625rem]" ng-click="toggleFullscreen()"
+                    title="Toggle Full Screen">
+                    <span class="material-symbols-outlined text-[1.125rem] text-[var(--accent-cyan)]">
+                        {{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}
+                    </span>
+                </button>
+
+                <button type="button" class="btn btn-ghost px-[0.5rem]" ng-click="toggleTheme()"
+                    title="Toggle Light / Dark Mode">
+                    <span class="material-symbols-outlined text-[1rem] text-[var(--accent-cyan)]">
+                        {{ isDark ? 'light_mode' : 'dark_mode' }}
+                    </span>
+                </button>
+
+                <button type="button" class="btn btn-primary uppercase tracking-wider" ng-click="openNewQuoteModal()">
+                    <i class="fa-solid fa-plus text-[0.875rem]"></i>
+                    <span class="hidden sm:inline">New Quotation</span>
+                    <span class="sm:hidden">New Quote</span>
+                </button>
+
+                <button type="button" class="btn btn-success uppercase tracking-wider" ng-click="openNewPOModal()"
+                    ng-show="activeStage === 'po'">
+                    <i class="fa-solid fa-cart-plus text-[0.875rem]"></i>
+                    <span class="hidden sm:inline">New PO</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN WORKSPACE -->
+        <main class="theme-bg-app w-full pt-[3.5rem] h-full overflow-hidden max-w-full">
+
+            <!-- SECTION 1 - uPVC_Quotation_Master -->
+            <div id="viewMaster" ng-show="activeStage === 'master'"
+                class="stage-view flex flex-col w-full h-[calc(100vh-3.5rem)] overflow-hidden max-w-full">
+                <section class="theme-bg-panel w-full h-full flex flex-col overflow-hidden max-w-full">
+
+                    <div
+                        class="min-h-[3rem] py-[0.25rem] px-[1.25rem] border-b border-[var(--border-main)] flex items-center justify-between gap-[0.75rem] flex-wrap shrink-0">
+                        <div class="flex items-center gap-[0.5rem] min-w-0">
+                            <span
+                                class="material-symbols-outlined text-[1rem] text-[var(--accent-blue)]">table_view</span>
+                            <h2 class="font-mono text-[0.8125rem] font-bold whitespace-nowrap">uPVC_Quotation_Master
+                            </h2>
+                            <span class="chip">15 Cols &bull; Multi-File Enabled</span>
+                            <span class="font-mono text-[0.625rem] text-[var(--text-muted)]">{{ filteredMaster.length ||
+                                0 }} shown</span>
+                        </div>
+
+                        <div class="flex items-center gap-[0.5rem] flex-wrap">
+                            <select ng-model="filters.masterVendor" class="theme-input" style="width:8.5rem">
+                                <option value="">All Vendors</option>
+                                <option ng-repeat="v in db.config.vendors" ng-value="v">{{ v }}</option>
+                            </select>
+                            <select ng-model="filters.masterVariant" class="theme-input" style="width:9rem">
+                                <option value="">All Variants</option>
+                                <option ng-repeat="v in db.config.variants" ng-value="v">{{ v }}</option>
+                            </select>
+                            <select ng-model="filters.masterDoc" class="theme-input" style="width:9.5rem">
+                                <option value="">All Documents</option>
+                                <option value="roughSizes">Rough Sizes missing</option>
+                                <option value="vendorQuote">Vendor Quote missing</option>
+                                <option value="ourQuote">Our Quote missing</option>
+                            </select>
+                            <button type="button" class="btn btn-ghost btn-xs"
+                                ng-click="resetMasterFilters()">Reset</button>
+                        </div>
+                    </div>
+
+                    <div class="theme-bg-table-body flex-1 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
+                        <table class="w-full min-w-[1050px] table-fixed border-collapse text-left">
+                            <thead class="theme-bg-table-head sticky top-0 z-20 border-b border-[var(--border-main)]">
+                                <tr class="h-[2.5rem] font-mono text-[0.625rem] uppercase tracking-wider">
+                                    <th
+                                        class="w-[2.5%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        #</th>
+                                    <th class="w-[5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Date</th>
+                                    <th
+                                        class="w-[16.5%] px-[0.625rem] leading-tight border-r border-[var(--border-main)]/30">
+                                        <div>Client / Site Name</div>
+                                        <div class="text-[0.5625rem] text-[var(--text-muted)] font-normal normal-case">
+                                            Vendor Name</div>
+                                    </th>
+                                    <th class="w-[11%] px-[0.5rem] border-r border-[var(--border-main)]/30">Location
+                                    </th>
+                                    <th class="w-[13.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Variant
+                                    </th>
+                                    <th class="w-[7.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Mesh /
+                                        Jaali</th>
+                                    <th class="w-[13.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Glass
+                                        Specs</th>
+                                    <th class="w-[3%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        Qty</th>
+                                    <th
+                                        class="w-[3.5%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        Lead Time</th>
+                                    <th class="w-[6%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        DWG</th>
+                                    <th class="w-[12%] px-[0.5rem] border-r border-[var(--border-main)]/30">Uploads
+                                        &amp; Amounts</th>
+                                    <th class="w-[6%] px-[0.5rem] text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[var(--border-main)] font-mono text-[0.75rem]">
+                                <tr ng-repeat="row in (filteredMaster = (db.master | filter:masterFilterFn)) track by row.id"
+                                    class="hover:bg-[var(--bg-surface-sub)] transition-colors">
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20 text-[var(--text-muted)]">
+                                        {{ $index + 1 }}</td>
+                                    <td
+                                        class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 whitespace-nowrap">
+                                        {{ row.date | limitTo:10 }}</td>
+                                    <td class="px-[0.625rem] py-[0.35rem] border-r border-[var(--border-main)]/20">
+                                        <div class="font-bold text-[var(--text-primary)] truncate"
+                                            title="{{ row.site }}">{{ row.site || '—' }}</div>
+                                        <div
+                                            class="text-[0.6875rem] text-[var(--text-muted)] truncate flex items-center gap-1">
+                                            <i class="fa-solid fa-store text-[0.5625rem] opacity-60"></i>
+                                            <span>{{ row.vendor || '—' }}</span>
+                                            <span class="chip chip-id text-[0.5625rem] py-0 px-1 ml-1">{{ row.id
+                                                }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
+                                        title="{{ row.location }}">{{ row.location || '—' }}</td>
+                                    <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
+                                        title="{{ row.variant }}">{{ row.variant || '—' }}</td>
+                                    <td
+                                        class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate">
+                                        {{ row.mesh || '—' }}</td>
+                                    <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
+                                        title="{{ row.glass }}">{{ row.glass || '—' }}</td>
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20">
+                                        {{ row.qty || 0 }}</td>
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20">
+                                        {{ row.leadTime ? row.leadTime + ' d' : '—' }}</td>
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20">
+                                        <span ng-if="row.roughSizes && row.roughSizes.length"
+                                            class="chip chip-doc cursor-pointer"
+                                            ng-click="openPreview(row.roughSizes[0], row.roughSizes)"
+                                            title="{{ row.roughSizes[0].name }}">
+                                            DWG <i class="fa-solid fa-paperclip text-[0.625rem]"></i>
+                                        </span>
+                                        <span ng-if="!row.roughSizes || !row.roughSizes.length"
+                                            class="chip chip-empty">—</span>
+                                    </td>
+                                    <td class="px-[0.5rem] py-[0.35rem] border-r border-[var(--border-main)]/20">
+                                        <div class="flex items-center justify-between text-[0.6875rem]">
+                                            <span class="text-[var(--text-muted)]">VQ:</span>
+                                            <span class="font-bold">{{ row.vendorAmount | indianCurrency }}</span>
+                                        </div>
+                                        <div
+                                            class="flex items-center justify-between text-[0.6875rem] text-emerald-600 dark:text-emerald-400">
+                                            <span>OQ:</span>
+                                            <span class="font-bold">{{ row.ourAmount | indianCurrency }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-[0.5rem] py-[0.45rem] text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button type="button" class="btn btn-ghost btn-xs"
+                                                ng-click="openDetail('master', row)" title="View Details">
+                                                <span
+                                                    class="material-symbols-outlined text-[0.875rem]">open_in_new</span>
+                                            </button>
+                                            <button type="button" class="btn btn-success btn-xs"
+                                                ng-click="openWinTransition(row)" title="Convert to PO">
+                                                <i class="fa-solid fa-cart-plus text-[0.6875rem]"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr ng-if="!filteredMaster.length">
+                                    <td colspan="12" class="py-[3rem] text-center text-[var(--text-muted)] font-mono">
+                                        No active inquiries match the selected criteria.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Status Bar -->
+                    <div
+                        class="theme-bg-status min-h-[2.5rem] px-[1.25rem] py-[0.25rem] border-t border-[var(--border-main)] flex items-center justify-between font-mono text-[0.6875rem] shrink-0 flex-wrap gap-[0.5rem] overflow-hidden">
+                        <div class="flex items-center gap-[0.75rem] flex-wrap">
+                            <span class="flex items-center gap-[0.375rem]">
+                                <span class="w-[0.5rem] h-[0.5rem] rounded-full bg-[#10B981]"></span>
+                                <span>{{ filteredMaster.length || 0 }} Inquiries</span>
+                            </span>
+                            <span class="text-[var(--border-subtle)]">|</span>
+                            <span>Vendor Cost: <strong class="text-[var(--text-primary)] font-bold">{{
+                                    sumColumn(filteredMaster, 'vendorAmount') | indianCurrency }}</strong></span>
+                            <span class="text-[var(--border-subtle)]">|</span>
+                            <span>Pipeline Value: <strong class="text-[#059669] dark:text-[#10B981] font-bold">{{
+                                    sumColumn(filteredMaster, 'ourAmount') | indianCurrency }}</strong></span>
+                        </div>
+                        <span class="text-[var(--text-muted)] flex items-center gap-[0.375rem]">
+                            <span>2-WAY GOOGLE SHEET SYNC</span>
+                            <span
+                                class="material-symbols-outlined text-[0.875rem] text-[#059669] dark:text-[#10B981]">sync</span>
+                        </span>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SECTION 2 - uPVC_Purchase_Order_Master -->
+            <div id="viewPO" ng-show="activeStage === 'po'"
+                class="stage-view flex flex-col w-full h-[calc(100vh-3.5rem)] overflow-hidden max-w-full">
+                <section class="theme-bg-panel w-full h-full flex flex-col overflow-hidden max-w-full">
+
+                    <div
+                        class="min-h-[3rem] py-[0.25rem] px-[1.25rem] border-b border-[var(--border-main)] flex items-center justify-between gap-[0.75rem] flex-wrap shrink-0">
+                        <div class="flex items-center gap-[0.5rem] min-w-0">
+                            <h2 class="font-mono text-[0.8125rem] font-bold whitespace-nowrap">
+                                uPVC_Purchase_Order_Master</h2>
+                            <span class="chip">19 Cols</span>
+                            <span class="chip chip-doc">5 Multi-File Slots</span>
+                            <span class="font-mono text-[0.625rem] text-[var(--text-muted)]">{{ filteredPO.length || 0
+                                }} shown</span>
+                        </div>
+                        <div class="flex items-center gap-[0.5rem] flex-wrap">
+                            <select ng-model="filters.poVendor" class="theme-input" style="width:8.5rem">
+                                <option value="">All Vendors</option>
+                                <option ng-repeat="v in db.config.vendors" ng-value="v">{{ v }}</option>
+                            </select>
+                            <select ng-model="filters.poDoc" class="theme-input" style="width:10.5rem">
+                                <option value="">All Documents</option>
+                                <option value="roughSizes">Rough Sizes missing</option>
+                                <option value="vendorQuote">Vendor Quote missing</option>
+                                <option value="ourQuote">Our Quote missing</option>
+                                <option value="poOrder">PO Order missing</option>
+                                <option value="bills">Bills missing</option>
+                            </select>
+                            <button type="button" class="btn btn-ghost btn-xs"
+                                ng-click="resetPOFilters()">Reset</button>
+                            <button type="button"
+                                class="btn btn-success btn-xs flex items-center gap-[0.35rem] font-mono"
+                                ng-click="openNewPOModal()">
+                                <i class="fa-solid fa-cart-plus text-[0.75rem]"></i>
+                                <span>New PO</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="theme-bg-table-body flex-1 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
+                        <table class="w-full min-w-[1050px] table-fixed border-collapse text-left">
+                            <thead class="theme-bg-table-head sticky top-0 z-20 border-b border-[var(--border-main)]">
+                                <tr class="h-[2.5rem] font-mono text-[0.625rem] uppercase tracking-wider">
+                                    <th class="w-[5.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">PO Date
+                                    </th>
+                                    <th
+                                        class="w-[17%] px-[0.625rem] leading-tight border-r border-[var(--border-main)]/30">
+                                        <div>Client / Site Name</div>
+                                        <div class="text-[0.5625rem] text-[var(--text-muted)] font-normal normal-case">
+                                            Vendor Name</div>
+                                    </th>
+                                    <th class="w-[11.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Location
+                                    </th>
+                                    <th class="w-[13.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Variant
+                                    </th>
+                                    <th class="w-[7.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Mesh /
+                                        Jaali</th>
+                                    <th class="w-[14%] px-[0.5rem] border-r border-[var(--border-main)]/30">Glass Specs
+                                    </th>
+                                    <th class="w-[3%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        Qty</th>
+                                    <th
+                                        class="w-[3.5%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        Lead Time</th>
+                                    <th
+                                        class="w-[8.5%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        DWG / PO Order</th>
+                                    <th class="w-[12.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Uploads
+                                        &amp; Amounts</th>
+                                    <th class="w-[3.5%] px-[0.5rem] text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[var(--border-main)] font-mono text-[0.75rem]">
+                                <tr ng-repeat="row in (filteredPO = (db.po | filter:poFilterFn)) track by row.id"
+                                    class="hover:bg-[var(--bg-surface-sub)] transition-colors">
+                                    <td
+                                        class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 whitespace-nowrap">
+                                        {{ row.date | limitTo:10 }}</td>
+                                    <td class="px-[0.625rem] py-[0.35rem] border-r border-[var(--border-main)]/20">
+                                        <div class="font-bold text-[var(--text-primary)] truncate"
+                                            title="{{ row.site }}">{{ row.site || '—' }}</div>
+                                        <div
+                                            class="text-[0.6875rem] text-[var(--text-muted)] truncate flex items-center gap-1">
+                                            <i class="fa-solid fa-store text-[0.5625rem] opacity-60"></i>
+                                            <span>{{ row.vendor || '—' }}</span>
+                                            <span class="chip chip-id text-[0.5625rem] py-0 px-1 ml-1">{{ row.id
+                                                }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
+                                        title="{{ row.location }}">{{ row.location || '—' }}</td>
+                                    <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
+                                        title="{{ row.variant }}">{{ row.variant || '—' }}</td>
+                                    <td
+                                        class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate">
+                                        {{ row.mesh || '—' }}</td>
+                                    <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
+                                        title="{{ row.glass }}">{{ row.glass || '—' }}</td>
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20">
+                                        {{ row.qty || 0 }}</td>
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20">
+                                        {{ row.leadTime ? row.leadTime + ' d' : '—' }}</td>
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <span ng-if="row.poOrder && row.poOrder.length"
+                                                class="chip chip-doc cursor-pointer"
+                                                ng-click="openPreview(row.poOrder[0], row.poOrder)"
+                                                title="{{ row.poOrder[0].name }}">
+                                                PO <i class="fa-solid fa-paperclip text-[0.625rem]"></i>
+                                            </span>
+                                            <span ng-if="row.roughSizes && row.roughSizes.length"
+                                                class="chip chip-doc cursor-pointer"
+                                                ng-click="openPreview(row.roughSizes[0], row.roughSizes)"
+                                                title="{{ row.roughSizes[0].name }}">
+                                                DWG
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-[0.5rem] py-[0.35rem] border-r border-[var(--border-main)]/20">
+                                        <div class="flex items-center justify-between text-[0.6875rem]">
+                                            <span class="text-[var(--text-muted)]">Cost:</span>
+                                            <span class="font-bold">{{ row.vendorAmount | indianCurrency }}</span>
+                                        </div>
+                                        <div
+                                            class="flex items-center justify-between text-[0.6875rem] text-emerald-600 dark:text-emerald-400">
+                                            <span>Price:</span>
+                                            <span class="font-bold">{{ row.ourAmount | indianCurrency }}</span>
+                                        </div>
+                                        <div ng-if="row.billsAmt"
+                                            class="flex items-center justify-between text-[0.6875rem] text-blue-600 dark:text-blue-400">
+                                            <span>Bills:</span>
+                                            <span class="font-bold">{{ row.billsAmt | indianCurrency }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-[0.5rem] py-[0.45rem] text-center">
+                                        <button type="button" class="btn btn-ghost btn-xs"
+                                            ng-click="openDetail('po', row)" title="View PO Details">
+                                            <span class="material-symbols-outlined text-[0.875rem]">open_in_new</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr ng-if="!filteredPO.length">
+                                    <td colspan="11" class="py-[3rem] text-center text-[var(--text-muted)] font-mono">
+                                        No purchase orders match the selected criteria.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Status Bar -->
+                    <div
+                        class="theme-bg-status min-h-[2.5rem] px-[1.25rem] py-[0.25rem] border-t border-[var(--border-main)] flex items-center justify-between font-mono text-[0.6875rem] shrink-0 flex-wrap gap-[0.5rem] overflow-hidden">
+                        <div class="flex items-center gap-[0.75rem] flex-wrap">
+                            <span class="flex items-center gap-[0.375rem]">
+                                <span class="w-[0.5rem] h-[0.5rem] rounded-full bg-[#D97706]"></span>
+                                <span>{{ filteredPO.length || 0 }} Active POs</span>
+                            </span>
+                            <span class="text-[var(--border-subtle)]">|</span>
+                            <span>Vendor Exposure: <strong class="text-[var(--text-primary)] font-bold">{{
+                                    sumColumn(filteredPO, 'vendorAmount') | indianCurrency }}</strong></span>
+                            <span class="text-[var(--border-subtle)]">|</span>
+                            <span>Contract Value: <strong class="text-[#059669] dark:text-[#10B981] font-bold">{{
+                                    sumColumn(filteredPO, 'ourAmount') | indianCurrency }}</strong></span>
+                        </div>
+                        <span class="text-[var(--text-muted)] font-mono">Execution Pipeline</span>
+                    </div>
+                </section>
+            </div>
+
+            <!-- RECORD DETAIL VIEW -->
+            <div id="viewDetail" ng-show="activeStage === 'detail'"
+                class="stage-view w-full h-[calc(100vh-3.5rem)] flex flex-col overflow-y-auto theme-bg-app custom-scrollbar">
+
+                <div
+                    class="sticky top-0 z-30 theme-bg-header border-b border-[var(--border-main)] px-[1.25rem] py-[0.625rem] flex items-center justify-between gap-[1rem]">
+                    <div class="flex items-center gap-[0.75rem] min-w-0">
+                        <button type="button" class="btn btn-ghost btn-xs" ng-click="leaveDetail()">
+                            <span class="material-symbols-outlined text-[0.875rem]">arrow_back</span>
+                            <span>Back</span>
+                        </button>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-[0.5rem]">
+                                <h2 class="font-mono text-[0.9375rem] font-bold truncate">{{ detailRecord.id }}</h2>
+                                <span class="chip chip-id">{{ detailStageKey === 'master' ? 'Section 1: Quotation' :
+                                    'Section 2: PO' }}</span>
+                                <span class="chip font-bold">{{ detailRecord.site }}</span>
+                            </div>
+                            <p class="font-mono text-[0.625rem] text-[var(--text-muted)] mt-[0.15rem]">
+                                Last modified &bull; Full row data synced to Google Sheets
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-[0.5rem] shrink-0">
+                        <span class="chip chip-lost" ng-show="isDetailDirty()">Unsaved changes</span>
+                        <button type="button" class="btn btn-danger btn-xs" ng-click="deleteDetailRecord()"
+                            title="Delete this row">
+                            <i class="fa-solid fa-trash"></i>
+                            <span>Delete Row</span>
+                        </button>
+                        <button type="button" class="btn btn-success btn-xs" ng-if="detailStageKey === 'master'"
+                            ng-click="openWinTransition(detailRecord)">
+                            <i class="fa-solid fa-arrow-right"></i>
+                            <span>Convert to PO</span>
+                        </button>
+                        <button type="button" class="btn btn-primary btn-xs" ng-click="saveDetailRecord()"
+                            ng-disabled="!isDetailDirty()">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Save Changes</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-[1.25rem] flex flex-col gap-[1rem] w-full">
+
+                    <!-- Basic Fields Grid -->
+                    <section class="w-full theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                        <div
+                            class="flex items-center justify-between pb-[0.625rem] mb-[0.75rem] border-b border-[var(--border-main)]">
+                            <h3 class="font-mono text-[0.75rem] font-bold uppercase tracking-wider">Record Fields</h3>
+                            <span class="chip">{{ detailStageKey === 'master' ? '15 Cols' : '19 Cols' }}</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[0.75rem]">
+                            <div>
+                                <label class="field-label">Date</label>
+                                <input type="date" ng-model="detailRecord.date" class="theme-input" />
+                            </div>
+                            <div>
+                                <label class="field-label">Client / Site Name</label>
+                                <input type="text" ng-model="detailRecord.site" class="theme-input" />
+                            </div>
+                            <div>
+                                <label class="field-label">Location</label>
+                                <input type="text" ng-model="detailRecord.location" class="theme-input" />
+                            </div>
+                            <div>
+                                <label class="field-label">Vendor Name</label>
+                                <select ng-model="detailRecord.vendor" class="theme-input">
+                                    <option value="">Select Vendor</option>
+                                    <option ng-repeat="v in db.config.vendors" ng-value="v">{{ v }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="field-label">Variant</label>
+                                <input type="text" ng-model="detailRecord.variant" class="theme-input"
+                                    placeholder="e.g. 3-Track Sliding" />
+                            </div>
+                            <div>
+                                <label class="field-label">Mesh / Jaali</label>
+                                <select ng-model="detailRecord.mesh" class="theme-input">
+                                    <option value="">Select Mesh</option>
+                                    <option ng-repeat="m in db.config.meshTypes" ng-value="m">{{ m }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="field-label">Glass Specs</label>
+                                <input type="text" ng-model="detailRecord.glass" class="theme-input"
+                                    placeholder="e.g. 5mm Clear Toughened" />
+                            </div>
+                            <div>
+                                <label class="field-label">Item Qty</label>
+                                <input type="number" ng-model="detailRecord.qty" class="theme-input" />
+                            </div>
+                            <div>
+                                <label class="field-label">Lead Time (Days)</label>
+                                <input type="number" ng-model="detailRecord.leadTime" class="theme-input" />
+                            </div>
+                            <div>
+                                <label class="field-label">Vendor Amount</label>
+                                <input type="number" ng-model="detailRecord.vendorAmount" class="theme-input" />
+                            </div>
+                            <div>
+                                <label class="field-label">Our Amount</label>
+                                <input type="number" ng-model="detailRecord.ourAmount" class="theme-input" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Document Upload Slots -->
+                    <section class="w-full space-y-[1rem]">
+                        <div class="theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                            <div
+                                class="flex items-center justify-between pb-[0.625rem] mb-[0.625rem] border-b border-[var(--border-main)]">
+                                <h3 class="font-mono text-[0.75rem] font-bold uppercase tracking-wider">Single-File
+                                    Document Hub</h3>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" class="btn btn-primary btn-xs" ng-if="hasPendingDetailFiles()" ng-click="saveDetailRecord()">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        <span>Upload Queued Files</span>
+                                    </button>
+                                    <span class="chip chip-doc">Strictly 1 File Per Slot</span>
+                                </div>
+                            </div>
+
+                            <p class="font-mono text-[0.6875rem] text-[var(--text-muted)] mb-[0.75rem]">
+                                Queue files (Rough Sizes / DWG, Vendor Quote, Our Quote) and save all together in one batch. Superceded Drive files are automatically moved to trash.
+                            </p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-[0.75rem] items-stretch">
+                                <!-- Single-File Slots (Queued for Batch Upload) -->
+                                <div ng-repeat="docKey in getStageDocKeys(detailStageKey)" ng-if="docKey !== 'bills'"
+                                    class="file-drop-area flex flex-col justify-between"
+                                    file-slot="detailPendingFiles[docKey]">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-mono text-[0.75rem] font-bold text-[var(--text-primary)]">{{ DOC_LABELS[docKey].label }}</span>
+                                            <span ng-if="detailPendingFiles[docKey]" class="chip chip-amt text-[0.625rem] py-0 px-1">Queued</span>
+                                            <span ng-if="!detailPendingFiles[docKey] && detailRecord[docKey] && detailRecord[docKey].length" class="chip chip-doc text-[0.625rem] py-0 px-1">1 File</span>
+                                            <span ng-if="!detailPendingFiles[docKey] && (!detailRecord[docKey] || !detailRecord[docKey].length)" class="chip chip-empty text-[0.625rem] py-0 px-1">Empty</span>
+                                        </div>
+
+                                        <!-- Show newly queued file waiting to be batch-uploaded -->
+                                        <div ng-if="detailPendingFiles[docKey]" class="p-2 rounded bg-emerald-500/10 border border-emerald-500/40 mb-2">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <div class="font-mono text-[0.6875rem] font-bold text-emerald-600 dark:text-emerald-400 truncate" title="{{ detailPendingFiles[docKey].name }}">
+                                                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> {{ detailPendingFiles[docKey].name }}
+                                                </div>
+                                                <button type="button" class="text-red-500 font-bold px-1 hover:text-red-700" ng-click="detailPendingFiles[docKey] = null" title="Clear queued file">&times;</button>
+                                            </div>
+                                            <div class="font-mono text-[0.5625rem] text-[var(--text-muted)] mt-0.5">Ready &mdash; click Save Changes or Upload Queued Files</div>
+                                        </div>
+
+                                        <!-- Show existing saved file -->
+                                        <div ng-if="!detailPendingFiles[docKey] && detailRecord[docKey] && detailRecord[docKey].length" class="p-2 rounded bg-[var(--bg-panel)] border border-[var(--border-main)] mb-2">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <i class="fa-solid fa-file-pdf text-red-500 text-[1rem]"></i>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="font-mono text-[0.6875rem] font-bold truncate cursor-pointer hover:underline text-[#2563EB]"
+                                                        ng-click="openPreview(detailRecord[docKey][0], detailRecord[docKey])" title="{{ detailRecord[docKey][0].name }}">
+                                                        {{ detailRecord[docKey][0].name }}
+                                                    </div>
+                                                    <div class="text-[0.5625rem] text-[var(--text-muted)]">
+                                                        {{ (detailRecord[docKey][0].size / 1024) | number:0 }} KB
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-ghost btn-xs text-red-500" ng-click="deleteDocFile(detailStageKey, detailRecord.id, docKey)" title="Delete File">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div ng-if="!detailPendingFiles[docKey] && (!detailRecord[docKey] || !detailRecord[docKey].length)" class="py-6 text-center font-mono text-[0.6875rem] text-[var(--text-muted)]">
+                                            No file uploaded yet
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-2 pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                                        <label class="btn btn-ghost btn-xs cursor-pointer">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                                            <span>{{ detailPendingFiles[docKey] ? 'Change File' : ((detailRecord[docKey] && detailRecord[docKey].length) ? 'Replace File' : 'Select File') }}</span>
+                                            <input type="file" class="hidden" />
+                                        </label>
+                                        <span class="font-mono text-[0.5625rem] text-[var(--text-faint)]">Drag &amp; drop</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invoices (Bills) Section if PO -->
+                        <div ng-if="detailStageKey === 'po'"
+                            class="theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                            <div
+                                class="flex items-center justify-between pb-[0.625rem] mb-[0.625rem] border-b border-[var(--border-main)]">
+                                <h3 class="font-mono text-[0.75rem] font-bold uppercase tracking-wider">Vendor Bills
+                                    &amp; Invoices</h3>
+                                <span class="chip chip-amt">{{ (detailRecord.bills || []).length }} Invoices &bull;
+                                    Total: {{ detailRecord.billsAmt | indianCurrency }}</span>
+                            </div>
+
+                            <div class="space-y-2 mb-3">
+                                <div ng-repeat="b in detailRecord.bills track by $index"
+                                    class="flex items-center justify-between p-2 rounded bg-[var(--bg-surface-sub)] border border-[var(--border-main)] font-mono text-[0.6875rem]">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-[var(--text-muted)] font-bold">{{ $index + 1 }}.</span>
+                                        <span><strong>Date:</strong> {{ b.date }}</span>
+                                        <span><strong>Invoice No:</strong> {{ b.invoiceNo }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">{{ b.amount |
+                                            indianCurrency }}</span>
+                                        <button type="button" class="btn btn-ghost btn-xs text-red-500"
+                                            ng-click="removeBillFromRecord(detailRecord, $index)">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div ng-if="!detailRecord.bills.length"
+                                    class="text-center py-4 font-mono text-[0.6875rem] text-[var(--text-muted)]">
+                                    No invoices attached yet.
+                                </div>
+                            </div>
+
+                            <!-- Add Bill Row -->
+                            <div
+                                class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-[var(--border-subtle)] items-end">
+                                <div>
+                                    <label class="field-label">Invoice Date</label>
+                                    <input type="date" ng-model="newDetailBill.date" class="theme-input" />
+                                </div>
+                                <div>
+                                    <label class="field-label">Invoice Number</label>
+                                    <input type="text" ng-model="newDetailBill.invoiceNo" class="theme-input"
+                                        placeholder="INV-001" />
+                                </div>
+                                <div>
+                                    <label class="field-label">Invoice Amount</label>
+                                    <input type="number" ng-model="newDetailBill.amount" class="theme-input"
+                                        placeholder="Amount (INR)" />
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary w-full"
+                                        ng-click="addBillToRecord(detailRecord, newDetailBill)">
+                                        <i class="fa-solid fa-plus"></i> Add Invoice
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- WIN -> PO CONVERSION PAGE -->
+            <div id="viewWinTransition" ng-show="activeStage === 'wintransition'"
+                class="stage-view w-full h-[calc(100vh-3.5rem)] flex flex-col overflow-y-auto theme-bg-app custom-scrollbar">
+
+                <div
+                    class="sticky top-0 z-30 theme-bg-header border-b border-[var(--border-main)] px-[1.25rem] py-[0.625rem] flex items-center justify-between gap-[1rem]">
+                    <div class="flex items-center gap-[0.75rem] min-w-0">
+                        <button type="button" class="btn btn-ghost btn-xs" ng-click="cancelWinTransition()">
+                            <span class="material-symbols-outlined text-[0.875rem]">arrow_back</span>
+                            <span>Cancel</span>
+                        </button>
+                        <div>
+                            <h2 class="font-mono text-[0.9375rem] font-bold">Convert Quotation &rarr; Purchase Order
+                            </h2>
+                            <p class="font-mono text-[0.625rem] text-[var(--text-muted)]">Moves inquiry from
+                                uPVC_Quotation_Master into uPVC_Purchase_Order_Master.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-success" ng-click="submitWinTransition()">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Confirm &amp; Create PO</span>
+                    </button>
+                </div>
+
+                <div class="p-[1.25rem] grid grid-cols-1 xl:grid-cols-12 gap-[1rem] items-start">
+
+                    <section
+                        class="xl:col-span-4 theme-bg-card border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                        <h3
+                            class="font-mono text-[0.75rem] font-bold uppercase tracking-wider pb-[0.625rem] mb-[0.75rem] border-b border-[var(--border-main)]">
+                            Source Quotation Summary
+                        </h3>
+                        <div class="space-y-[0.5rem] font-mono text-[0.6875rem]">
+                            <div class="flex items-center justify-between py-1 border-b border-[var(--border-subtle)]">
+                                <span class="text-[var(--text-muted)]">Quotation ID</span>
+                                <span class="font-bold">{{ transRecord.id }}</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1 border-b border-[var(--border-subtle)]">
+                                <span class="text-[var(--text-muted)]">Client / Site</span>
+                                <span class="font-bold">{{ transRecord.site }}</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1 border-b border-[var(--border-subtle)]">
+                                <span class="text-[var(--text-muted)]">Vendor</span>
+                                <span class="font-bold">{{ transRecord.vendor }}</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1 border-b border-[var(--border-subtle)]">
+                                <span class="text-[var(--text-muted)]">Variant</span>
+                                <span class="font-bold">{{ transRecord.variant }}</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1 border-b border-[var(--border-subtle)]">
+                                <span class="text-[var(--text-muted)]">Vendor Amount</span>
+                                <span class="font-bold">{{ transRecord.vendorAmount | indianCurrency }}</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1 border-b border-[var(--border-subtle)]">
+                                <span class="text-[var(--text-muted)]">Our Amount</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ transRecord.ourAmount
+                                    | indianCurrency }}</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="xl:col-span-8 space-y-[1rem]">
+                        <div class="theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                            <h3
+                                class="font-mono text-[0.75rem] font-bold uppercase tracking-wider pb-[0.625rem] mb-[0.75rem] border-b border-[var(--border-main)]">
+                                Purchase Order Parameters
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[0.75rem]">
+                                <div>
+                                    <label class="field-label">PO Date</label>
+                                    <input type="date" ng-model="transPayload.poDate" class="theme-input" />
+                                </div>
+                                <div>
+                                    <label class="field-label">Client / Site Name</label>
+                                    <input type="text" ng-model="transPayload.site" class="theme-input" />
+                                </div>
+                                <div>
+                                    <label class="field-label">Vendor Name</label>
+                                    <select ng-model="transPayload.vendor" class="theme-input">
+                                        <option value="">Select Vendor</option>
+                                        <option ng-repeat="v in db.config.vendors" ng-value="v">{{ v }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="field-label">Item Qty</label>
+                                    <input type="number" ng-model="transPayload.qty" class="theme-input" />
+                                </div>
+                                <div>
+                                    <label class="field-label">Vendor Amount</label>
+                                    <input type="number" ng-model="transPayload.vendorAmount" class="theme-input" />
+                                </div>
+                                <div>
+                                    <label class="field-label">Our Amount</label>
+                                    <input type="number" ng-model="transPayload.ourAmount" class="theme-input" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5 Upload Slots -->
+                        <div class="theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                            <h3
+                                class="font-mono text-[0.75rem] font-bold uppercase tracking-wider pb-[0.625rem] mb-[0.75rem] border-b border-[var(--border-main)]">
+                                Upload Documents (Rough Sizes &bull; Vendor Quote &bull; Our Quote &bull; PO Order)
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[0.75rem]">
+                                <div ng-repeat="docKey in ['roughSizes', 'vendorQuote', 'ourQuote', 'poOrder']"
+                                    class="file-drop-area flex flex-col justify-between" file-slot="transFiles[docKey]">
+                                    <div>
+                                        <div class="font-mono text-[0.75rem] font-bold mb-1">{{ DOC_LABELS[docKey].label
+                                            }}</div>
+                                        <div class="font-mono text-[0.6875rem] text-[var(--text-muted)] truncate">
+                                            {{ transFiles[docKey] ? transFiles[docKey].name : (transRecord[docKey] &&
+                                            transRecord[docKey].length ? transRecord[docKey][0].name : 'No file chosen')
+                                            }}
+                                        </div>
+                                    </div>
+                                    <label class="btn btn-ghost btn-xs mt-3 cursor-pointer self-start">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        <span>{{ transFiles[docKey] || (transRecord[docKey] &&
+                                            transRecord[docKey].length) ? 'Change' : 'Select' }}</span>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- SECTION 3 - uPVC_Config_Dropdowns -->
+            <div id="viewConfig" ng-show="activeStage === 'config'"
+                class="stage-view w-full h-[calc(100vh-3.5rem)] flex flex-col p-[1.25rem] gap-[1rem] overflow-y-auto theme-bg-app custom-scrollbar">
+
+                <div class="flex items-center justify-between gap-[1rem]">
+                    <div>
+                        <h2 class="text-[1.125rem] font-bold tracking-tight">uPVC_Config_Dropdowns &mdash; Lookup
+                            Control</h2>
+                        <p class="font-mono text-[0.6875rem] text-[var(--text-muted)]">Central dropdown standards synced
+                            with Google Sheets.</p>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-xs" ng-click="reapplyValidations()">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Re-apply Sheet Validation</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-[0.75rem]">
+                    <div ng-repeat="(catKey, catItems) in db.config"
+                        class="theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem] flex flex-col">
+                        <div class="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-main)]">
+                            <h4 class="font-mono text-[0.75rem] font-bold uppercase truncate">{{ catKey }}</h4>
+                            <span class="chip text-[0.625rem] py-0 px-1">{{ catItems.length }}</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto max-h-[14rem] space-y-1 mb-3 custom-scrollbar">
+                            <div ng-repeat="item in catItems track by $index"
+                                class="flex items-center justify-between px-2 py-1 rounded bg-[var(--bg-surface-sub)] text-[0.6875rem] font-mono">
+                                <span class="truncate">{{ item }}</span>
+                                <button type="button" class="text-red-500 hover:text-red-700 ml-1"
+                                    ng-click="removeConfigOption(catKey, item)">
+                                    &times;
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex gap-1 mt-auto">
+                            <input type="text" ng-model="newConfigItem[catKey]" placeholder="Add new..."
+                                class="theme-input text-[0.6875rem] py-1" />
+                            <button type="button" class="btn btn-primary btn-xs"
+                                ng-click="addConfigOption(catKey, newConfigItem[catKey])">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PIPELINE ANALYTICS -->
+            <div id="viewAnalytics" ng-show="activeStage === 'analytics'"
+                class="stage-view w-full h-[calc(100vh-3.5rem)] flex flex-col p-[1.25rem] gap-[1rem] overflow-y-auto theme-bg-app custom-scrollbar">
+
+                <div class="flex items-center justify-between gap-[1rem]">
+                    <div>
+                        <h2 class="text-[1.125rem] font-bold tracking-tight">Pipeline Analytics</h2>
+                        <p class="font-mono text-[0.6875rem] text-[var(--text-muted)]">Live KPIs computed across
+                            Quotation Master and Purchase Order Master.</p>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-xs" ng-click="syncSheetData()">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Reload From Sheet</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-[0.75rem]">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Inquiries</div>
+                        <div class="stat-value">{{ db.master.length || 0 }}</div>
+                        <div class="stat-note">Quotation Master rows</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active POs</div>
+                        <div class="stat-value text-[#059669] dark:text-[#10B981]">{{ db.po.length || 0 }}</div>
+                        <div class="stat-note">PO Master rows</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Lead Time</div>
+                        <div class="stat-value">{{ getAvgLeadTime() }} d</div>
+                        <div class="stat-note">Across active inquiries</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">PO Contract Value</div>
+                        <div class="stat-value">{{ sumColumn(db.po, 'ourAmount') | indianCurrency }}</div>
+                        <div class="stat-note">Sum of Our Amount (PO)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">PO Vendor Cost</div>
+                        <div class="stat-value">{{ sumColumn(db.po, 'vendorAmount') | indianCurrency }}</div>
+                        <div class="stat-note">Sum of Vendor Amount (PO)</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-[1rem]">
+                    <div class="theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                        <h3
+                            class="font-mono text-[0.75rem] font-bold uppercase tracking-wider pb-[0.625rem] mb-[0.75rem] border-b border-[var(--border-main)]">
+                            Variant Mix
+                        </h3>
+                        <div class="space-y-2 font-mono text-[0.75rem]">
+                            <div ng-repeat="(k, v) in getDistribution('master', 'variant')"
+                                class="flex items-center justify-between">
+                                <span class="truncate">{{ k || 'Unspecified' }}</span>
+                                <span class="chip">{{ v }} inquiries</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="theme-bg-panel border border-[var(--border-main)] rounded-[0.5rem] p-[1rem]">
+                        <h3
+                            class="font-mono text-[0.75rem] font-bold uppercase tracking-wider pb-[0.625rem] mb-[0.75rem] border-b border-[var(--border-main)]">
+                            Vendor Distribution
+                        </h3>
+                        <div class="space-y-2 font-mono text-[0.75rem]">
+                            <div ng-repeat="(k, v) in getDistribution('master', 'vendor')"
+                                class="flex items-center justify-between">
+                                <span class="truncate">{{ k || 'Unassigned' }}</span>
+                                <span class="chip">{{ v }} inquiries</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- NEW QUOTATION MODAL -->
+        <div id="modalNewQuote" class="modal-shell" ng-show="modals.newQuote">
+            <div class="modal-card" style="width:100%; max-width:min(88rem, 96vw)"
+                ng-class="{'is-maximized': isMaximized.newQuote}">
+                <div
+                    class="px-[1.5rem] py-[1rem] border-b border-[var(--border-main)] flex items-center justify-between shrink-0">
+                    <div>
+                        <h3 class="font-mono text-[1.0625rem] font-bold text-[var(--text-primary)]">New Quotation
+                            &mdash; uPVC_Quotation_Master</h3>
+                        <p class="font-mono text-[0.75rem] text-[var(--text-muted)] mt-[0.15rem]">Quotation ID is
+                            auto-generated &bull; Strictly 1 file per slot</p>
+                    </div>
+                    <div class="flex items-center gap-[0.5rem]">
+                        <button type="button" class="btn btn-ghost btn-xs"
+                            ng-click="isMaximized.newQuote = !isMaximized.newQuote" title="Maximize Dialog">
+                            <span class="material-symbols-outlined text-[1.125rem]">open_in_full</span>
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-xs text-[1.125rem] px-[0.625rem]"
+                            ng-click="closeNewQuoteModal()">&times;</button>
+                    </div>
+                </div>
+                <div class="p-[1.5rem] overflow-y-auto custom-scrollbar flex-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-[1rem]">
+                        <div>
+                            <label class="field-label">Date *</label>
+                            <input type="date" ng-model="newQuote.date" class="theme-input" required />
+                        </div>
+                        <div>
+                            <label class="field-label">Client / Site Name *</label>
+                            <input type="text" ng-model="newQuote.site" placeholder="Site name" class="theme-input"
+                                required />
+                        </div>
+                        <div>
+                            <label class="field-label">Location</label>
+                            <input type="text" ng-model="newQuote.location" placeholder="Address / Google Maps URL"
+                                class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Vendor Name</label>
+                            <select ng-model="newQuote.vendor" class="theme-input">
+                                <option value="">Select Vendor</option>
+                                <option ng-repeat="v in db.config.vendors" ng-value="v">{{ v }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Variant</label>
+                            <input type="text" ng-model="newQuote.variant" placeholder="e.g. 2.5 Track Sliding"
+                                class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Mesh / Jaali</label>
+                            <select ng-model="newQuote.mesh" class="theme-input">
+                                <option value="">Select Mesh</option>
+                                <option ng-repeat="m in db.config.meshTypes" ng-value="m">{{ m }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Glass Specs</label>
+                            <input type="text" ng-model="newQuote.glass" placeholder="e.g. 5mm Clear Toughened"
+                                class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Item Qty</label>
+                            <input type="number" ng-model="newQuote.qty" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Lead Time (Days)</label>
+                            <input type="number" ng-model="newQuote.leadTime" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Vendor Quote Amount (₹)</label>
+                            <input type="number" ng-model="newQuote.vendorAmount" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Our Quote Amount (₹)</label>
+                            <input type="number" ng-model="newQuote.ourAmount" class="theme-input" />
+                        </div>
+                    </div>
+
+                    <!-- 3 Upload Slots -->
+                    <div class="mt-[1.5rem] pt-[1rem] border-t border-[var(--border-main)]">
+                        <h4 class="field-label text-[0.75rem] mb-[0.75rem]">Document Slots (Rough Sizes, Vendor Quote,
+                            Our Quote)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-[1rem]">
+                            <div ng-repeat="docKey in ['roughSizes', 'vendorQuote', 'ourQuote']"
+                                class="file-drop-area flex flex-col justify-between" file-slot="newQuoteFiles[docKey]">
+                                <div>
+                                    <div class="font-mono text-[0.75rem] font-bold mb-1">{{ DOC_LABELS[docKey].label }}
+                                    </div>
+                                    <div class="font-mono text-[0.6875rem] text-[var(--text-muted)] truncate">
+                                        {{ newQuoteFiles[docKey] ? newQuoteFiles[docKey].name : 'Drag & drop file or
+                                        browse' }}
+                                    </div>
+                                </div>
+                                <label class="btn btn-ghost btn-xs mt-3 cursor-pointer self-start">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>{{ newQuoteFiles[docKey] ? 'Change' : 'Browse' }}</span>
+                                    <input type="file" class="hidden" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="px-[1.5rem] py-[1rem] border-t border-[var(--border-main)] flex items-center justify-between shrink-0">
+                    <span class="font-mono text-[0.6875rem] text-[var(--text-muted)]">Uploads and sheet rows save in ONE
+                        atomic batch pass.</span>
+                    <div class="flex items-center gap-[0.75rem]">
+                        <button type="button" class="btn btn-ghost" ng-click="closeNewQuoteModal()">Cancel</button>
+                        <button type="button" class="btn btn-primary" ng-click="submitNewQuotation()">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Create Quotation</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW DIRECT PURCHASE ORDER MODAL -->
+        <div id="modalNewPO" class="modal-shell" ng-show="modals.newPo">
+            <div class="modal-card" style="width:100%; max-width:min(88rem, 96vw)"
+                ng-class="{'is-maximized': isMaximized.newPo}">
+                <div
+                    class="px-[1.5rem] py-[1rem] border-b border-[var(--border-main)] flex items-center justify-between shrink-0">
+                    <div>
+                        <h3 class="font-mono text-[1.0625rem] font-bold text-[var(--text-primary)]">New Direct Purchase
+                            Order &mdash; uPVC_Purchase_Order_Master</h3>
+                        <p class="font-mono text-[0.75rem] text-[var(--text-muted)] mt-[0.15rem]">PO ID is
+                            auto-generated &bull; Single-file slots</p>
+                    </div>
+                    <div class="flex items-center gap-[0.5rem]">
+                        <button type="button" class="btn btn-ghost btn-xs"
+                            ng-click="isMaximized.newPo = !isMaximized.newPo" title="Maximize Dialog">
+                            <span class="material-symbols-outlined text-[1.125rem]">open_in_full</span>
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-xs text-[1.125rem] px-[0.625rem]"
+                            ng-click="closeNewPOModal()">&times;</button>
+                    </div>
+                </div>
+                <div class="p-[1.5rem] overflow-y-auto custom-scrollbar flex-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-[1rem]">
+                        <div>
+                            <label class="field-label">PO Date *</label>
+                            <input type="date" ng-model="newPo.date" class="theme-input" required />
+                        </div>
+                        <div>
+                            <label class="field-label">Client / Site Name *</label>
+                            <input type="text" ng-model="newPo.site" placeholder="Site name" class="theme-input"
+                                required />
+                        </div>
+                        <div>
+                            <label class="field-label">Location</label>
+                            <input type="text" ng-model="newPo.location" placeholder="Address" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Vendor Name</label>
+                            <select ng-model="newPo.vendor" class="theme-input">
+                                <option value="">Select Vendor</option>
+                                <option ng-repeat="v in db.config.vendors" ng-value="v">{{ v }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Variant</label>
+                            <input type="text" ng-model="newPo.variant" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Mesh / Jaali</label>
+                            <select ng-model="newPo.mesh" class="theme-input">
+                                <option value="">Select Mesh</option>
+                                <option ng-repeat="m in db.config.meshTypes" ng-value="m">{{ m }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Glass Specs</label>
+                            <input type="text" ng-model="newPo.glass" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Item Qty</label>
+                            <input type="number" ng-model="newPo.qty" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Vendor Cost Amount (₹)</label>
+                            <input type="number" ng-model="newPo.vendorAmount" class="theme-input" />
+                        </div>
+                        <div>
+                            <label class="field-label">Our Contract Amount (₹)</label>
+                            <input type="number" ng-model="newPo.ourAmount" class="theme-input" />
+                        </div>
+                    </div>
+
+                    <!-- 4 Upload Slots -->
+                    <div class="mt-[1.5rem] pt-[1rem] border-t border-[var(--border-main)]">
+                        <h4 class="field-label text-[0.75rem] mb-[0.75rem]">Document Slots (DWG, Vendor Quote, Our
+                            Quote, PO Order)</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1rem]">
+                            <div ng-repeat="docKey in ['roughSizes', 'vendorQuote', 'ourQuote', 'poOrder']"
+                                class="file-drop-area flex flex-col justify-between" file-slot="newPoFiles[docKey]">
+                                <div>
+                                    <div class="font-mono text-[0.75rem] font-bold mb-1">{{ DOC_LABELS[docKey].label }}
+                                    </div>
+                                    <div class="font-mono text-[0.6875rem] text-[var(--text-muted)] truncate">
+                                        {{ newPoFiles[docKey] ? newPoFiles[docKey].name : 'Drag & drop file or browse'
+                                        }}
+                                    </div>
+                                </div>
+                                <label class="btn btn-ghost btn-xs mt-3 cursor-pointer self-start">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>{{ newPoFiles[docKey] ? 'Change' : 'Browse' }}</span>
+                                    <input type="file" class="hidden" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="px-[1.5rem] py-[1rem] border-t border-[var(--border-main)] flex items-center justify-between shrink-0">
+                    <span class="font-mono text-[0.6875rem] text-[var(--text-muted)]">Creates PO in sheet and uploads
+                        files in one pass.</span>
+                    <div class="flex items-center gap-[0.75rem]">
+                        <button type="button" class="btn btn-ghost" ng-click="closeNewPOModal()">Cancel</button>
+                        <button type="button" class="btn btn-success" ng-click="submitNewPO()">
+                            <i class="fa-solid fa-cart-plus"></i>
+                            <span>Create Purchase Order</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENT PREVIEW MODAL -->
+        <div id="modalPreview" class="modal-shell" ng-show="modals.preview" style="z-index:95">
+            <div class="modal-card" style="width:100%; max-width:min(90rem, 96vw)"
+                ng-class="{'is-maximized': isMaximized.preview}">
+                <div
+                    class="px-[1.25rem] py-[0.75rem] border-b border-[var(--border-main)] flex items-center justify-between shrink-0">
+                    <h3 class="font-mono text-[0.9375rem] font-bold truncate">{{ previewFile.name || 'Preview' }}</h3>
+                    <div class="flex items-center gap-[0.5rem] flex-wrap">
+                        <button type="button" class="btn btn-ghost btn-xs"
+                            ng-click="openDriveLink(previewFile.url)">Open in Drive</button>
+                        <button type="button" class="btn btn-ghost btn-xs"
+                            ng-click="isMaximized.preview = !isMaximized.preview" title="Maximize Preview">
+                            <span class="material-symbols-outlined text-[1rem]">open_in_full</span>
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-xs" ng-click="closePreview()">&times;</button>
+                    </div>
+                </div>
+                <div class="p-[0.5rem] overflow-hidden flex items-center justify-center flex-1 w-full"
+                    style="min-height:28rem; height:calc(100vh - 8rem)">
+                    <iframe ng-if="previewFile.previewUrl" ng-src="{{ previewFile.previewUrl }}"
+                        class="w-full h-full border-0 rounded" allow="autoplay"></iframe>
+                    <div ng-if="!previewFile.previewUrl" class="font-mono text-[0.75rem] text-[var(--text-muted)]">
+                        No preview available for this document.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GLOBAL SAVE LOADER -->
+        <div id="globalSaveLoader"
+            class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm items-center justify-center"
+            ng-class="{'flex': loader.show, 'hidden': !loader.show}">
+            <div
+                class="theme-bg-panel border border-[var(--border-main)] rounded-[0.75rem] p-[1.5rem] shadow-2xl flex flex-col items-center gap-[0.875rem] max-w-[22rem] w-full text-center mx-[1rem]">
+                <div
+                    class="w-[2.5rem] h-[2.5rem] border-[0.2rem] border-[#2563EB]/20 border-t-[#2563EB] rounded-full spin">
+                </div>
+                <div class="flex flex-col gap-[0.25rem]">
+                    <div class="font-bold text-[0.875rem]">{{ loader.title || 'Saving...' }}</div>
+                    <div class="font-mono text-[0.6875rem] text-[var(--text-muted)]">{{ loader.subtitle || 'Please wait'
+                        }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOAST CONTAINER -->
+        <div id="toastContainer"
+            class="fixed bottom-[1rem] right-[1rem] z-[110] flex flex-col gap-[0.5rem] pointer-events-none">
+            <div ng-repeat="t in toasts track by t.id"
+                class="pointer-events-auto p-3 rounded-[0.5rem] shadow-xl border flex items-center gap-3 transition-all"
+                ng-class="{
+                    'bg-emerald-50 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800': t.type === 'success',
+                    'bg-red-50 text-red-900 border-red-300 dark:bg-red-950 dark:text-red-200 dark:border-red-800': t.type === 'error',
+                    'bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800': t.type === 'warning',
+                    'bg-slate-50 text-slate-900 border-slate-300 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700': !t.type || t.type === 'info'
+                }">
+                <i class="fa-solid" ng-class="{
+                    'fa-check-circle text-emerald-500': t.type === 'success',
+                    'fa-circle-xmark text-red-500': t.type === 'error',
+                    'fa-triangle-exclamation text-amber-500': t.type === 'warning',
+                    'fa-info-circle text-blue-500': !t.type || t.type === 'info'
+                }"></i>
+                <div>
+                    <div class="font-bold text-[0.75rem]">{{ t.title }}</div>
+                    <div class="font-mono text-[0.625rem] opacity-80">{{ t.message }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANGULARJS APPLICATION SCRIPT -->
+    <script>
+        var app = angular.module('upvcFmsApp', ['ngSanitize']);
+
+        // Whitelist Drive/Google URLs for iframes
+        app.config(['$sceDelegateProvider', function ($sceDelegateProvider) {
+            $sceDelegateProvider.resourceUrlWhitelist([
+                'self',
+                'https://drive.google.com/**',
+                'https://lh3.googleusercontent.com/**',
+                'https://www.w3.org/**'
+            ]);
+        }]);
+
+        // Currency Filter (Indian Numbering Format)
+        app.filter('indianCurrency', function () {
+            return function (val) {
+                if (val === null || val === undefined || val === '') return '₹ 0';
+                var num = parseFloat(String(val).replace(/[^0-9.\-]/g, '')) || 0;
+                return '₹ ' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(num);
+            };
+        });
+
+        // GasService: Promisified backend service
+        app.service('GasService', ['$q', '$window', function ($q, $window) {
+            var isGas = !!($window.google && $window.google.script && $window.google.script.run);
+
+            this.isGas = function () {
+                return isGas;
+            };
+
+            this.run = function (fnName) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                var deferred = $q.defer();
+
+                if (!isGas) {
+                    deferred.reject({ message: 'Running in offline/local browser mode' });
+                    return deferred.promise;
+                }
+
+                $window.google.script.run
+                    .withSuccessHandler(function (res) { deferred.resolve(res); })
+                    .withFailureHandler(function (err) { deferred.reject(err); })[fnName].apply(null, args);
+
+                return deferred.promise;
+            };
+
+            this.readFileAsBase64 = function (file) {
+                var deferred = $q.defer();
+                var reader = new FileReader();
+                reader.onload = function () {
+                    var res = String(reader.result || '');
+                    var comma = res.indexOf(',');
+                    deferred.resolve({
+                        fileName: file.name,
+                        mimeType: file.type || 'application/octet-stream',
+                        base64Data: comma > -1 ? res.substring(comma + 1) : res
+                    });
+                };
+                reader.onerror = function () { deferred.reject('Failed to read ' + file.name); };
+                reader.readAsDataURL(file);
+                return deferred.promise;
+            };
+        }]);
+
+        // File Slot Directive: handles file inputs and drag & drop
+        app.directive('fileSlot', function () {
+            return {
+                restrict: 'A',
+                scope: {
+                    fileSlot: '=',
+                    onFilePicked: '&'
+                },
+                link: function (scope, element) {
+                    var input = element[0].querySelector('input[type="file"]');
+
+                    element.on('dragover dragenter', function (e) {
+                        e.preventDefault();
+                        element.addClass('drag-over');
+                    });
+                    element.on('dragleave drop', function (e) {
+                        e.preventDefault();
+                        element.removeClass('drag-over');
+                    });
+                    element.on('drop', function (e) {
+                        var files = e.dataTransfer && e.dataTransfer.files;
+                        if (files && files.length) {
+                            scope.$apply(function () {
+                                scope.fileSlot = files[0];
+                                if (scope.onFilePicked) scope.onFilePicked({ file: files[0] });
+                            });
+                        }
+                    });
+                    if (input) {
+                        angular.element(input).on('change', function (e) {
+                            var files = e.target.files;
+                            if (files && files.length) {
+                                scope.$apply(function () {
+                                    scope.fileSlot = files[0];
+                                    if (scope.onFilePicked) scope.onFilePicked({ file: files[0] });
+                                });
+                            }
+                        });
+                    }
+                }
+            };
+        });
+
+        // Main Application Controller
+        app.controller('MainCtrl', ['$scope', '$q', 'GasService', function ($scope, $q, GasService) {
+            $scope.activeStage = 'master'; // master | po | detail | wintransition | config | analytics
+            $scope.isDark = localStorage.getItem('upvc_theme') === 'dark';
+            if ($scope.isDark) document.documentElement.classList.add('dark');
+
+            $scope.DOC_LABELS = {
+                roughSizes: { label: '1. Rough Sizes', hint: 'Architect DWG' },
+                vendorQuote: { label: '2. Vendor Quote', hint: 'Supplier Quote' },
+                ourQuote: { label: '3. Our Quote', hint: 'Client Quotation' },
+                poOrder: { label: '4. PO Order', hint: 'Client Purchase Order' },
+                bills: { label: '5. Bills', hint: 'Vendor Invoices' }
+            };
+
+            $scope.db = {
+                master: [],
+                po: [],
+                config: {
+                    vendors: ['NCL', 'Prominance', 'Kommerling', 'Deceuninck', 'Aluplast'],
+                    variants: ['2-Track Sliding', '2.5-Track Sliding', '3-Track Sliding', 'Casement Window', 'Slide & Fold'],
+                    meshTypes: ['SS 304 Mesh', 'Fiberglass Mesh', 'None'],
+                    glassTypes: ['5mm Clear Toughened', '6mm Clear Toughened', '5mm Frosted', 'Double Glazed (DGU)']
+                }
+            };
+
+            $scope.filters = {
+                search: '',
+                masterVendor: '',
+                masterVariant: '',
+                masterDoc: '',
+                poVendor: '',
+                poDoc: ''
+            };
+
+            $scope.modals = {
+                newQuote: false,
+                newPo: false,
+                preview: false
+            };
+
+            $scope.isMaximized = {
+                newQuote: false,
+                newPo: false,
+                preview: false
+            };
+
+            $scope.loader = { show: false, title: '', subtitle: '' };
+            $scope.toasts = [];
+
+            // Stage Navigation
+            $scope.switchStage = function (stage) {
+                $scope.activeStage = stage;
+            };
+
+            $scope.toggleTheme = function () {
+                $scope.isDark = !$scope.isDark;
+                if ($scope.isDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('upvc_theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('upvc_theme', 'light');
+                }
+            };
+
+            $scope.toggleFullscreen = function () {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(function () { });
+                    $scope.isFullscreen = true;
+                } else {
+                    document.exitFullscreen().catch(function () { });
+                    $scope.isFullscreen = false;
+                }
+            };
+
+            // Toast helper
+            $scope.showToast = function (title, message, type) {
+                var toast = { id: Date.now() + Math.random(), title: title, message: message, type: type || 'info' };
+                $scope.toasts.push(toast);
+                setTimeout(function () {
+                    var idx = $scope.toasts.indexOf(toast);
+                    if (idx > -1) {
+                        $scope.toasts.splice(idx, 1);
+                        $scope.$apply();
+                    }
+                }, 4000);
+            };
+
+            $scope.showLoader = function (title, subtitle) {
+                $scope.loader.title = title || 'Loading...';
+                $scope.loader.subtitle = subtitle || 'Please wait';
+                $scope.loader.show = true;
+            };
+
+            $scope.hideLoader = function () {
+                $scope.loader.show = false;
+            };
+
+            // Normalization ensuring bills is never wiped
+            $scope.normalizeRecord = function (record) {
+                if (!record) return record;
+                record.id = String(record.id || '');
+                ['site', 'location', 'vendor', 'variant', 'mesh', 'glass', 'quotationId', 'date'].forEach(function (key) {
+                    record[key] = (record[key] === undefined || record[key] === null) ? '' : String(record[key]);
+                });
+                ['qty', 'leadTime'].forEach(function (key) {
+                    record[key] = parseInt(record[key], 10) || 0;
+                });
+                ['vendorAmount', 'ourAmount', 'billsAmt'].forEach(function (key) {
+                    record[key] = parseFloat(record[key]) || 0;
+                });
+                ['roughSizes', 'vendorQuote', 'ourQuote', 'poOrder'].forEach(function (key) {
+                    record[key] = Array.isArray(record[key]) ? record[key] : [];
+                });
+                record.bills = Array.isArray(record.bills) ? record.bills : [];
+                return record;
+            };
+
+            // Initial Data Fetch
+            $scope.initData = function () {
+                $scope.showLoader('Loading Data...', 'Fetching tables from Google Sheets');
+                GasService.run('getInitialData')
+                    .then(function (payload) {
+                        if (payload) {
+                            $scope.db.master = (payload.masterQuotations || []).map($scope.normalizeRecord);
+                            $scope.db.po = (payload.purchaseOrders || []).map($scope.normalizeRecord);
+                            if (payload.config) $scope.db.config = payload.config;
+                            $scope.showToast('Connected', 'Google Sheets data synchronized.', 'success');
+                        }
+                    })
+                    .catch(function () {
+                        // Fallback to local stored or demo data
+                        var stored = localStorage.getItem('upvc_local_db');
+                        if (stored) {
+                            try {
+                                var p = JSON.parse(stored);
+                                $scope.db.master = (p.masterQuotations || []).map($scope.normalizeRecord);
+                                $scope.db.po = (p.purchaseOrders || []).map($scope.normalizeRecord);
+                                if (p.config) $scope.db.config = p.config;
+                            } catch (e) { }
+                        }
+                        if (!$scope.db.master.length && !$scope.db.po.length) {
+                            $scope.loadDemoData();
+                        }
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            $scope.syncSheetData = function () {
+                $scope.initData();
+            };
+
+            // Filtering Functions
+            $scope.masterFilterFn = function (row) {
+                if ($scope.filters.search) {
+                    var s = $scope.filters.search.toLowerCase();
+                    var match = (row.id && row.id.toLowerCase().indexOf(s) > -1) ||
+                        (row.site && row.site.toLowerCase().indexOf(s) > -1) ||
+                        (row.vendor && row.vendor.toLowerCase().indexOf(s) > -1) ||
+                        (row.location && row.location.toLowerCase().indexOf(s) > -1);
+                    if (!match) return false;
+                }
+                if ($scope.filters.masterVendor && row.vendor !== $scope.filters.masterVendor) return false;
+                if ($scope.filters.masterVariant && row.variant !== $scope.filters.masterVariant) return false;
+                if ($scope.filters.masterDoc) {
+                    var doc = row[$scope.filters.masterDoc];
+                    if (doc && doc.length > 0) return false;
+                }
+                return true;
+            };
+
+            $scope.poFilterFn = function (row) {
+                if ($scope.filters.search) {
+                    var s = $scope.filters.search.toLowerCase();
+                    var match = (row.id && row.id.toLowerCase().indexOf(s) > -1) ||
+                        (row.site && row.site.toLowerCase().indexOf(s) > -1) ||
+                        (row.vendor && row.vendor.toLowerCase().indexOf(s) > -1);
+                    if (!match) return false;
+                }
+                if ($scope.filters.poVendor && row.vendor !== $scope.filters.poVendor) return false;
+                if ($scope.filters.poDoc) {
+                    var doc = row[$scope.filters.poDoc];
+                    if (doc && doc.length > 0) return false;
+                }
+                return true;
+            };
+
+            $scope.resetMasterFilters = function () {
+                $scope.filters.masterVendor = '';
+                $scope.filters.masterVariant = '';
+                $scope.filters.masterDoc = '';
+            };
+
+            $scope.resetPOFilters = function () {
+                $scope.filters.poVendor = '';
+                $scope.filters.poDoc = '';
+            };
+
+            $scope.sumColumn = function (list, colName) {
+                return (list || []).reduce(function (sum, item) {
+                    return sum + (parseFloat(item[colName]) || 0);
+                }, 0);
+            };
+
+            $scope.getStageDocKeys = function (stageKey) {
+                return stageKey === 'po'
+                    ? ['roughSizes', 'vendorQuote', 'ourQuote', 'poOrder', 'bills']
+                    : ['roughSizes', 'vendorQuote', 'ourQuote'];
+            };
+
+            // Preview modal
+            $scope.openPreview = function (file, list) {
+                if (!file) return;
+                $scope.previewFile = file;
+                $scope.modals.preview = true;
+            };
+
+            $scope.closePreview = function () {
+                $scope.modals.preview = false;
+                $scope.previewFile = null;
+            };
+
+            $scope.openDriveLink = function (url) {
+                if (url) window.open(url, '_blank');
+            };
+
+            // ----------------------------------------------------
+            // NEW QUOTATION MODAL & CREATION
+            // ----------------------------------------------------
+            $scope.openNewQuoteModal = function () {
+                $scope.newQuote = {
+                    date: new Date().toISOString().substring(0, 10),
+                    site: '',
+                    location: '',
+                    vendor: '',
+                    variant: '',
+                    mesh: '',
+                    glass: '',
+                    qty: 1,
+                    leadTime: 15,
+                    vendorAmount: null,
+                    ourAmount: null
+                };
+                $scope.newQuoteFiles = {};
+                $scope.modals.newQuote = true;
+            };
+
+            $scope.closeNewQuoteModal = function () {
+                $scope.modals.newQuote = false;
+            };
+
+            $scope.submitNewQuotation = function () {
+                if (!$scope.newQuote.site) {
+                    $scope.showToast('Validation', 'Client / Site Name is required', 'warning');
+                    return;
+                }
+                $scope.showLoader('Creating Quotation...', 'Writing row & batch uploading files');
+
+                GasService.run('createQuotation', $scope.newQuote)
+                    .then(function (res) {
+                        var quotationId = res.quotationId;
+                        if (res.record) $scope.db.master.push($scope.normalizeRecord(res.record));
+
+                        // Read all selected files into Base64 in parallel
+                        var filePromises = [];
+                        ['roughSizes', 'vendorQuote', 'ourQuote'].forEach(function (docKey) {
+                            var f = $scope.newQuoteFiles[docKey];
+                            if (f) {
+                                filePromises.push(GasService.readFileAsBase64(f).then(function (b64) {
+                                    b64.docKey = docKey;
+                                    return b64;
+                                }));
+                            }
+                        });
+
+                        if (!filePromises.length) return res;
+                        return $q.all(filePromises).then(function (batchPayload) {
+                            return GasService.run('uploadRecordFilesBatch', 'uPVC_Quotation_Master', quotationId, batchPayload);
+                        });
+                    })
+                    .then(function (batchRes) {
+                        if (batchRes && batchRes.record) {
+                            var idx = $scope.db.master.findIndex(function (r) { return r.id === batchRes.id; });
+                            if (idx > -1) $scope.db.master[idx] = $scope.normalizeRecord(batchRes.record);
+                        }
+                        $scope.closeNewQuoteModal();
+                        $scope.showToast('Quotation Created', 'Added to Quotation Master and synced.', 'success');
+                    })
+                    .catch(function (err) {
+                        // Offline mockup fallback
+                        var localId = 'QT-UPVC-' + Math.floor(1000 + Math.random() * 9000);
+                        var rec = $scope.normalizeRecord(angular.extend({}, $scope.newQuote, { id: localId }));
+                        $scope.db.master.push(rec);
+                        $scope.closeNewQuoteModal();
+                        $scope.showToast('Created', localId + ' created locally.', 'success');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            // ----------------------------------------------------
+            // NEW PO MODAL & CREATION
+            // ----------------------------------------------------
+            $scope.openNewPOModal = function () {
+                $scope.newPo = {
+                    date: new Date().toISOString().substring(0, 10),
+                    site: '',
+                    location: '',
+                    vendor: '',
+                    variant: '',
+                    mesh: '',
+                    glass: '',
+                    qty: 1,
+                    leadTime: 15,
+                    vendorAmount: null,
+                    ourAmount: null
+                };
+                $scope.newPoFiles = {};
+                $scope.modals.newPo = true;
+            };
+
+            $scope.closeNewPOModal = function () {
+                $scope.modals.newPo = false;
+            };
+
+            $scope.submitNewPO = function () {
+                if (!$scope.newPo.site) {
+                    $scope.showToast('Validation', 'Client / Site Name is required', 'warning');
+                    return;
+                }
+                $scope.showLoader('Creating Direct PO...', 'Writing row & batch uploading files');
+
+                GasService.run('createDirectPO', $scope.newPo)
+                    .then(function (res) {
+                        var poId = res.poId;
+                        if (res.record) $scope.db.po.push($scope.normalizeRecord(res.record));
+
+                        var filePromises = [];
+                        ['roughSizes', 'vendorQuote', 'ourQuote', 'poOrder'].forEach(function (docKey) {
+                            var f = $scope.newPoFiles[docKey];
+                            if (f) {
+                                filePromises.push(GasService.readFileAsBase64(f).then(function (b64) {
+                                    b64.docKey = docKey;
+                                    return b64;
+                                }));
+                            }
+                        });
+
+                        if (!filePromises.length) return res;
+                        return $q.all(filePromises).then(function (batchPayload) {
+                            return GasService.run('uploadRecordFilesBatch', 'uPVC_Purchase_Order_Master', poId, batchPayload);
+                        });
+                    })
+                    .then(function (batchRes) {
+                        if (batchRes && batchRes.record) {
+                            var idx = $scope.db.po.findIndex(function (r) { return r.id === batchRes.id; });
+                            if (idx > -1) $scope.db.po[idx] = $scope.normalizeRecord(batchRes.record);
+                        }
+                        $scope.closeNewPOModal();
+                        $scope.showToast('PO Created', 'Added to Purchase Order Master.', 'success');
+                    })
+                    .catch(function () {
+                        var localId = 'PO-UPVC-' + Math.floor(1000 + Math.random() * 9000);
+                        var rec = $scope.normalizeRecord(angular.extend({}, $scope.newPo, { id: localId }));
+                        $scope.db.po.push(rec);
+                        $scope.closeNewPOModal();
+                        $scope.showToast('Created', localId + ' created locally.', 'success');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            // ----------------------------------------------------
+            // RECORD DETAIL DRAWER & EDITING
+            // ----------------------------------------------------
+            $scope.openDetail = function (stageKey, row) {
+                $scope.detailStageKey = stageKey;
+                $scope.detailRecord = angular.copy(row);
+                $scope.detailOriginal = angular.copy(row);
+                $scope.detailPendingFiles = {};
+                $scope.newDetailBill = { date: new Date().toISOString().substring(0, 10), invoiceNo: '', amount: null };
+                $scope.activeStage = 'detail';
+            };
+
+            $scope.leaveDetail = function () {
+                $scope.activeStage = $scope.detailStageKey || 'master';
+            };
+
+            $scope.hasPendingDetailFiles = function () {
+                if (!$scope.detailPendingFiles) return false;
+                return Object.keys($scope.detailPendingFiles).some(function (k) {
+                    return !!$scope.detailPendingFiles[k];
+                });
+            };
+
+            $scope.isDetailDirty = function () {
+                return !angular.equals($scope.detailRecord, $scope.detailOriginal) || $scope.hasPendingDetailFiles();
+            };
+
+            $scope.saveDetailRecord = function () {
+                if (!$scope.detailRecord.site || !String($scope.detailRecord.site).trim()) {
+                    $scope.showToast('Missing Value', 'Client / Site Name is required.', 'warning');
+                    return;
+                }
+                if (typeof autoSaveNewLookups === 'function') autoSaveNewLookups($scope.detailRecord);
+                var stageKey = $scope.detailStageKey;
+                var sheetName = stageKey === 'po' ? 'uPVC_Purchase_Order_Master' : 'uPVC_Quotation_Master';
+                var recordId = $scope.detailRecord.id;
+
+                // Collect all queued files across all slots (DWG, Vendor Quote, Our Quote, PO Order)
+                var pendingKeys = Object.keys($scope.detailPendingFiles || {}).filter(function (k) {
+                    return !!$scope.detailPendingFiles[k];
+                });
+
+                if (!GasService.isGas()) {
+                    var targetList = stageKey === 'po' ? $scope.db.po : $scope.db.master;
+                    var i = targetList.findIndex(function (r) { return r.id === recordId; });
+                    if (i > -1) {
+                        pendingKeys.forEach(function (k) {
+                            var f = $scope.detailPendingFiles[k];
+                            $scope.detailRecord[k] = [{
+                                id: 'local_' + Date.now() + '_' + k,
+                                name: f.name,
+                                url: '#',
+                                previewUrl: '#',
+                                size: f.size
+                            }];
+                        });
+                        targetList[i] = $scope.normalizeRecord(angular.copy($scope.detailRecord));
+                    }
+                    $scope.detailOriginal = angular.copy($scope.detailRecord);
+                    $scope.detailPendingFiles = {};
+                    $scope.recomputeAnalytics();
+                    $scope.showToast('Saved (Offline)', recordId + ' updated locally.', 'success');
+                    return;
+                }
+
+                $scope.showLoader(
+                    'Saving ' + recordId + '...',
+                    pendingKeys.length ? ('Uploading ' + pendingKeys.length + ' file(s) & updating sheet') : ('Writing to ' + sheetName)
+                );
+
+                // 1. Update text/amount fields first
+                GasService.run('updateRecordFull', sheetName, recordId, $scope.detailRecord)
+                    .then(function (res) {
+                        if (!pendingKeys.length) return res;
+
+                        // 2. Read all queued files in parallel and upload in ONE batch call
+                        var filePromises = pendingKeys.map(function (docKey) {
+                            return GasService.readFileAsBase64($scope.detailPendingFiles[docKey]).then(function (b64) {
+                                b64.docKey = docKey;
+                                return b64;
+                            });
+                        });
+
+                        return $q.all(filePromises).then(function (batchPayload) {
+                            return GasService.run('uploadRecordFilesBatch', sheetName, recordId, batchPayload);
+                        });
+                    })
+                    .then(function (finalRes) {
+                        var updated = (finalRes && finalRes.record)
+                            ? $scope.normalizeRecord(finalRes.record)
+                            : $scope.normalizeRecord($scope.detailRecord);
+
+                        var targetList = stageKey === 'po' ? $scope.db.po : $scope.db.master;
+                        var idx = targetList.findIndex(function (r) { return r.id === recordId; });
+                        if (idx > -1) targetList[idx] = angular.copy(updated);
+
+                        $scope.detailRecord = angular.copy(updated);
+                        $scope.detailOriginal = angular.copy(updated);
+                        $scope.detailPendingFiles = {};
+                        $scope.recomputeAnalytics();
+                        $scope.showToast('Saved', recordId + ' and all queued files updated in one pass!', 'success');
+                    })
+                    .catch(function (err) {
+                        $scope.showToast('Save Error', err.message || err, 'error');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            $scope.deleteDetailRecord = function () {
+                if (!confirm('Are you sure you want to delete ' + $scope.detailRecord.id + '?')) return;
+                $scope.showLoader('Deleting Row...', 'Removing from Google Sheets');
+                var sheetName = $scope.detailStageKey === 'po' ? 'uPVC_Purchase_Order_Master' : 'uPVC_Quotation_Master';
+
+                GasService.run('deleteRecord', sheetName, $scope.detailRecord.id)
+                    .then(function () {
+                        var targetList = $scope.detailStageKey === 'po' ? $scope.db.po : $scope.db.master;
+                        var idx = targetList.findIndex(function (r) { return r.id === $scope.detailRecord.id; });
+                        if (idx > -1) targetList.splice(idx, 1);
+                        $scope.leaveDetail();
+                        $scope.showToast('Deleted', 'Record removed.', 'success');
+                    })
+                    .catch(function (err) {
+                        $scope.showToast('Delete Error', err.message || err, 'error');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            // Single File upload in Detail view
+            $scope.uploadSingleFile = function (stageKey, recordId, docKey, file) {
+                if (!file) return;
+                $scope.showLoader('Uploading ' + file.name + '...', 'Replacing slot in Drive & Sheet');
+                var sheetName = stageKey === 'po' ? 'uPVC_Purchase_Order_Master' : 'uPVC_Quotation_Master';
+
+                GasService.readFileAsBase64(file)
+                    .then(function (b64) {
+                        b64.docKey = docKey;
+                        return GasService.run('uploadRecordFilesBatch', sheetName, recordId, [b64]);
+                    })
+                    .then(function (batchRes) {
+                        if (batchRes && batchRes.record) {
+                            $scope.detailRecord = $scope.normalizeRecord(batchRes.record);
+                            $scope.detailOriginal = angular.copy($scope.detailRecord);
+                            var targetList = stageKey === 'po' ? $scope.db.po : $scope.db.master;
+                            var idx = targetList.findIndex(function (r) { return r.id === recordId; });
+                            if (idx > -1) targetList[idx] = angular.copy($scope.detailRecord);
+                        }
+                        $scope.showToast('Uploaded', file.name + ' updated in ' + docKey, 'success');
+                    })
+                    .catch(function (err) {
+                        $scope.showToast('Upload Error', err.message || err, 'error');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            // Delete doc slot
+            $scope.deleteDocFile = function (stageKey, recordId, docKey) {
+                if (!confirm('Are you sure you want to delete file in ' + docKey + '?')) return;
+                $scope.showLoader('Deleting Document...', 'Clearing slot');
+                var sheetName = stageKey === 'po' ? 'uPVC_Purchase_Order_Master' : 'uPVC_Quotation_Master';
+
+                GasService.run('deleteRecordFile', sheetName, recordId, docKey)
+                    .then(function () {
+                        $scope.detailRecord[docKey] = [];
+                        $scope.detailOriginal[docKey] = [];
+                        var targetList = stageKey === 'po' ? $scope.db.po : $scope.db.master;
+                        var idx = targetList.findIndex(function (r) { return r.id === recordId; });
+                        if (idx > -1) targetList[idx][docKey] = [];
+                        $scope.showToast('Removed', 'File removed from ' + docKey, 'success');
+                    })
+                    .catch(function (err) {
+                        $scope.showToast('Error', err.message || err, 'error');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            // Invoices in Detail view
+            $scope.addBillToRecord = function (record, newBill) {
+                if (!newBill || !newBill.invoiceNo) {
+                    $scope.showToast('Validation', 'Invoice number is required', 'warning');
+                    return;
+                }
+                record.bills = record.bills || [];
+                record.bills.push({
+                    date: newBill.date || new Date().toISOString().substring(0, 10),
+                    invoiceNo: newBill.invoiceNo,
+                    amount: parseFloat(newBill.amount) || 0
+                });
+                record.billsAmt = record.bills.reduce(function (s, b) { return s + (b.amount || 0); }, 0);
+                newBill.invoiceNo = '';
+                newBill.amount = null;
+            };
+
+            $scope.removeBillFromRecord = function (record, index) {
+                if (record.bills && record.bills.length > index) {
+                    record.bills.splice(index, 1);
+                    record.billsAmt = record.bills.reduce(function (s, b) { return s + (b.amount || 0); }, 0);
+                }
+            };
+
+            // ----------------------------------------------------
+            // WIN TRANSITION (Quotation -> PO)
+            // ----------------------------------------------------
+            $scope.openWinTransition = function (quoteRow) {
+                $scope.transQuote = quoteRow;
+                $scope.transRecord = angular.copy(quoteRow);
+                $scope.transPayload = {
+                    poDate: new Date().toISOString().substring(0, 10),
+                    site: quoteRow.site,
+                    location: quoteRow.location,
+                    vendor: quoteRow.vendor,
+                    variant: quoteRow.variant,
+                    mesh: quoteRow.mesh,
+                    glass: quoteRow.glass,
+                    qty: quoteRow.qty,
+                    vendorAmount: quoteRow.vendorAmount,
+                    ourAmount: quoteRow.ourAmount
+                };
+                $scope.transFiles = {};
+                $scope.activeStage = 'wintransition';
+            };
+
+            $scope.cancelWinTransition = function () {
+                $scope.activeStage = 'master';
+            };
+
+            $scope.submitWinTransition = function () {
+                $scope.showLoader('Converting to Purchase Order...', 'Submitting Won Decision & uploading files');
+                var qId = $scope.transRecord.id;
+
+                GasService.run('submitDecision', qId, 'Won', '', $scope.transPayload)
+                    .then(function (res) {
+                        var poId = res.poId;
+                        $scope.db.master = $scope.db.master.filter(function (r) { return r.id !== qId; });
+                        if (res.poRecord) $scope.db.po.unshift($scope.normalizeRecord(res.poRecord));
+
+                        var filePromises = [];
+                        ['roughSizes', 'vendorQuote', 'ourQuote', 'poOrder'].forEach(function (docKey) {
+                            var f = $scope.transFiles[docKey];
+                            if (f) {
+                                filePromises.push(GasService.readFileAsBase64(f).then(function (b64) {
+                                    b64.docKey = docKey;
+                                    return b64;
+                                }));
+                            }
+                        });
+
+                        if (!filePromises.length) return res;
+                        return $q.all(filePromises).then(function (batchPayload) {
+                            return GasService.run('uploadRecordFilesBatch', 'uPVC_Purchase_Order_Master', poId, batchPayload);
+                        });
+                    })
+                    .then(function (batchRes) {
+                        if (batchRes && batchRes.record) {
+                            var idx = $scope.db.po.findIndex(function (r) { return r.id === batchRes.id; });
+                            if (idx > -1) $scope.db.po[idx] = $scope.normalizeRecord(batchRes.record);
+                        }
+                        $scope.activeStage = 'po';
+                        $scope.showToast('PO Created', qId + ' converted to Purchase Orders.', 'success');
+                    })
+                    .catch(function (err) {
+                        $scope.showToast('Conversion Error', err.message || err, 'error');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            // ----------------------------------------------------
+            // CONFIG LOOKUP MANAGEMENT
+            // ----------------------------------------------------
+            $scope.newConfigItem = {};
+
+            $scope.addConfigOption = function (catKey, value) {
+                if (!value || !String(value).trim()) return;
+                var trimmed = String(value).trim();
+                $scope.showLoader('Adding Option...', 'Syncing config');
+
+                GasService.run('saveConfigOption', catKey, trimmed)
+                    .then(function () {
+                        if (!$scope.db.config[catKey]) $scope.db.config[catKey] = [];
+                        if ($scope.db.config[catKey].indexOf(trimmed) === -1) {
+                            $scope.db.config[catKey].push(trimmed);
+                        }
+                        $scope.newConfigItem[catKey] = '';
+                        $scope.showToast('Saved', trimmed + ' added to ' + catKey, 'success');
+                    })
+                    .catch(function () {
+                        // local fallback
+                        if (!$scope.db.config[catKey]) $scope.db.config[catKey] = [];
+                        $scope.db.config[catKey].push(trimmed);
+                        $scope.newConfigItem[catKey] = '';
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            $scope.removeConfigOption = function (catKey, value) {
+                if (!confirm('Remove ' + value + ' from ' + catKey + '?')) return;
+                $scope.showLoader('Removing Option...', 'Syncing config');
+
+                GasService.run('deleteConfigOption', catKey, value)
+                    .then(function () {
+                        var idx = ($scope.db.config[catKey] || []).indexOf(value);
+                        if (idx > -1) $scope.db.config[catKey].splice(idx, 1);
+                        $scope.showToast('Removed', value + ' removed.', 'success');
+                    })
+                    .catch(function () {
+                        var idx = ($scope.db.config[catKey] || []).indexOf(value);
+                        if (idx > -1) $scope.db.config[catKey].splice(idx, 1);
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            $scope.reapplyValidations = function () {
+                $scope.showLoader('Re-applying...', 'Running Google Sheet validations');
+                GasService.run('refreshValidations')
+                    .then(function () {
+                        $scope.showToast('Success', 'Data validations refreshed.', 'success');
+                    })
+                    .catch(function (err) {
+                        $scope.showToast('Notice', err.message || err, 'info');
+                    })
+                    .finally(function () {
+                        $scope.hideLoader();
+                    });
+            };
+
+            // ----------------------------------------------------
+            // ANALYTICS COMPUTATIONS
+            // ----------------------------------------------------
+            $scope.getAvgLeadTime = function () {
+                var list = $scope.db.master || [];
+                if (!list.length) return 0;
+                var sum = list.reduce(function (s, r) { return s + (r.leadTime || 0); }, 0);
+                return Math.round(sum / list.length);
+            };
+
+            $scope.getDistribution = function (stage, field) {
+                var list = $scope.db[stage] || [];
+                var counts = {};
+                list.forEach(function (r) {
+                    var val = r[field] || 'Other';
+                    counts[val] = (counts[val] || 0) + 1;
+                });
+                return counts;
+            };
+
+            // ----------------------------------------------------
+            // DEMO DATA GENERATOR
+            // ----------------------------------------------------
+            $scope.loadDemoData = function () {
+                $scope.db.master = [
+                    {
+                        id: 'QT-UPVC-0001',
+                        site: 'Prestige Falcon City - Tower 4',
+                        date: '2026-10-14',
+                        location: 'Kanakapura Road, Bengaluru',
+                        vendor: 'NCL',
+                        variant: '3-Track Sliding',
+                        mesh: 'SS 304 Mesh',
+                        glass: '6mm Clear Toughened',
+                        qty: 14,
+                        leadTime: 15,
+                        roughSizes: [{ id: 'demo_dwg_01', name: 'Tower4_Window_Schedule.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 348160 }],
+                        vendorQuote: [{ id: 'demo_vq_01', name: 'NCL_Quote_Ref_9821.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 184320 }],
+                        ourQuote: [{ id: 'demo_oq_01', name: 'Quotation_PFC_Tower4_Final.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 225280 }],
+                        vendorAmount: 210000,
+                        ourAmount: 285000,
+                        bills: []
+                    },
+                    {
+                        id: 'QT-UPVC-0002',
+                        site: 'Oberoi Sky City - Penthouse B',
+                        date: '2026-10-16',
+                        location: 'Borivali East, Mumbai',
+                        vendor: 'Kommerling',
+                        variant: 'Slide & Fold',
+                        mesh: 'None',
+                        glass: 'Double Glazed (DGU)',
+                        qty: 6,
+                        leadTime: 20,
+                        roughSizes: [{ id: 'demo_dwg_02', name: 'PenthouseB_Balcony_Opening.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 412000 }],
+                        vendorQuote: [],
+                        ourQuote: [],
+                        vendorAmount: 345000,
+                        ourAmount: 490000,
+                        bills: []
+                    }
+                ];
+
+                $scope.db.po = [
+                    {
+                        id: 'PO-UPVC-0001',
+                        quotationId: 'QT-UPVC-0000',
+                        site: 'Godrej Woods - Villa 12',
+                        date: '2026-10-12',
+                        location: 'Sector 43, Noida',
+                        vendor: 'Prominance',
+                        variant: 'Casement Window',
+                        mesh: 'SS 304 Mesh',
+                        glass: '5mm Clear Toughened',
+                        qty: 8,
+                        leadTime: 12,
+                        poOrder: [{ id: 'demo_po_01', name: 'Official_PO_Godrej_Woods.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 199680 }],
+                        vendorAmount: 145000,
+                        ourAmount: 210000,
+                        bills: [
+                            { date: '2026-10-16', invoiceNo: 'INV-PA-3021', amount: 145000 }
+                        ],
+                        billsAmt: 145000
+                    }
+                ];
+
+                localStorage.setItem('upvc_local_db', JSON.stringify({
+                    masterQuotations: $scope.db.master,
+                    purchaseOrders: $scope.db.po,
+                    config: $scope.db.config
+                }));
+                $scope.showToast('Demo Data Loaded', 'Sample quotations & POs populated.', 'success');
+            };
+
+            // Start application
+            $scope.initData();
+        }]);
+    </script>
+</body>
+
+</html>

@@ -645,6 +645,113 @@ function writeDocCell_(sheet, rowIndex, col, files, docKey, skipSync) {
   return list;
 }
 
+// In-memory cache for sheet header/column mappings so we never re-scan workbook tabs multiple times per execution
+var _sheetMappingCache = {};
+
+/**
+ * Syncs ALL [DOC] columns of a single master row to linked sheets in ONE single pass.
+ */
+function syncRowDocsToLinkedSheets_(sheet, sheetName, rowIndex) {
+  try {
+    if (sheetName !== SHEET.QUOTATION_MASTER && sheetName !== SHEET.PO_MASTER) return;
+
+    var idCol = (columnIndexMap_(sheetName, sheet)[0] >= 0) ? (columnIndexMap_(sheetName, sheet)[0] + 1) : 1;
+    var recordId = String(sheet.getRange(rowIndex, idCol).getValue() || '').trim();
+    var siteCol = columnIndexByHeader_(sheetName, 'Client / Site Name', sheet);
+    var siteName = siteCol ? String(sheet.getRange(rowIndex, siteCol).getValue() || '').trim() : '';
+    var qIdCol = (sheetName === SHEET.PO_MASTER) ? columnIndexByHeader_(sheetName, 'Quotation ID', sheet) : 0;
+    var qId = qIdCol ? String(sheet.getRange(rowIndex, qIdCol).getValue() || '').trim() : '';
+
+    if (!recordId && !siteName) return;
+
+    var docSpecs = columnSpecs_(sheetName).filter(function (s) { return s[2] === 'doc'; });
+    var docData = [];
+    docSpecs.forEach(function (spec) {
+      var col = columnIndexByHeader_(sheetName, spec[0], sheet);
+      if (!col) return;
+      var range = sheet.getRange(rowIndex, col);
+      docData.push({
+        docKey: spec[1],
+        richText: range.getRichTextValue(),
+        note: range.getNote()
+      });
+    });
+
+    if (!docData.length) return;
+
+    var ss = getSpreadsheet_();
+    var allSheets = ss.getSheets();
+    var normId = normHeader_(recordId);
+    var normSite = normHeader_(siteName);
+    var normQId = normHeader_(qId);
+
+    var excludedSheets = [
+      sheetName.toLowerCase(),
+      SHEET.CONFIG_DROPDOWNS.toLowerCase(),
+      'setupconfig'
+    ];
+
+    allSheets.forEach(function (dstSheet) {
+      var dName = dstSheet.getName();
+      if (excludedSheets.indexOf(dName.toLowerCase()) > -1) return;
+      if (dName.toLowerCase().indexOf('cancel') > -1 || dName.toLowerCase().indexOf('done') > -1) return;
+      if (dName.toLowerCase() === 'summary' || dName.toLowerCase().indexOf('enquiry') > -1) return;
+
+      var lastRow = dstSheet.getLastRow();
+      var lastCol = dstSheet.getLastColumn();
+      if (lastRow < 2 || lastCol < 1) return;
+
+      var mapping = getSheetDocColumnMapping_(dstSheet, sheetName);
+      if (!mapping.siteCol && !mapping.idCol) return;
+
+      var matchingCols = [];
+      docData.forEach(function (d) {
+        if (mapping.docCols[d.docKey]) {
+          matchingCols.push({
+            col: mapping.docCols[d.docKey],
+            richText: d.richText,
+            note: d.note
+          });
+        }
+      });
+      if (!matchingCols.length) return;
+
+      var scanStart = mapping.headerRow + 1;
+      var numRows = lastRow - scanStart + 1;
+      if (numRows < 1) return;
+
+      var siteValues = mapping.siteCol ? dstSheet.getRange(scanStart, mapping.siteCol, numRows, 1).getValues() : null;
+      var idValues = mapping.idCol ? dstSheet.getRange(scanStart, mapping.idCol, numRows, 1).getValues() : null;
+
+      for (var i = 0; i < numRows; i++) {
+        var isMatch = false;
+
+        if (normSite && siteValues) {
+          var cellSite = normHeader_(siteValues[i][0]);
+          if (cellSite && cellSite === normSite) isMatch = true;
+        }
+
+        if (!isMatch && idValues) {
+          var cellId = normHeader_(idValues[i][0]);
+          if (cellId && (cellId === normId || (normQId && cellId === normQId))) isMatch = true;
+        }
+
+        if (isMatch) {
+          var rIdx = scanStart + i;
+          matchingCols.forEach(function (mc) {
+            var cellRange = dstSheet.getRange(rIdx, mc.col);
+            cellRange.setRichTextValue(mc.richText);
+            if (mc.note) cellRange.setNote(mc.note);
+            cellRange.setWrap(true);
+          });
+        }
+      }
+    });
+  } catch (e) {
+    Logger.log('Batch row doc sync skipped: ' + e);
+  }
+}
+
 function parseRichTextDocs_(richText) {
   if (!richText) return [];
   var runs = (typeof richText.getRuns === 'function') ? richText.getRuns() : [];
@@ -692,24 +799,15 @@ function reconcileDocCell_(rawVal, richVal, noteStr) {
   var textDocs = parseDocs_(text);
   var sheetDocs = richDocs.length ? richDocs : textDocs;
 
-  if (!sheetDocs.length) {
-    return noteDocs;
-  }
-  if (!noteDocs.length) {
-    return sheetDocs;
-  }
+  if (!sheetDocs.length) return noteDocs.slice(0, 1);
+  if (!noteDocs.length) return sheetDocs.slice(0, 1);
 
-  var noteById = {};
-  var noteByUrl = {};
-  noteDocs.forEach(function (nd) {
-    if (nd.id) noteById[String(nd.id)] = nd;
-    if (nd.url) noteByUrl[String(nd.url)] = nd;
-  });
+  var sd = sheetDocs[0];
+  var nd = noteDocs[0];
+  var isSame = (sd.id && nd.id && String(sd.id) === String(nd.id)) ||
+               (sd.url && nd.url && String(sd.url) === String(nd.url));
 
-  return sheetDocs.map(function (sd) {
-    var matched = (sd.id && noteById[String(sd.id)]) || (sd.url && noteByUrl[String(sd.url)]);
-    return matched ? matched : sd;
-  });
+  return [isSame ? nd : sd];
 }
 
 function serializeDocs_(value, docKey) {
@@ -978,11 +1076,13 @@ function upsertRow_(sheetName, payload, forcedId) {
   sheet.getRange(targetRow, 1, 1, numHeaders).setValues([row.slice(0, numHeaders)]);
 
   var specs = columnSpecs_(sheetName);
+  var hasDocUpdate = false;
   specs.forEach(function (spec) {
     if (spec[2] === 'doc') {
       var col = columnIndexByHeader_(sheetName, spec[0], sheet);
       if (col > 0 && payload && payload[spec[1]] !== undefined) {
-        writeDocCell_(sheet, targetRow, col, payload[spec[1]], spec[1]);
+        writeDocCell_(sheet, targetRow, col, payload[spec[1]], spec[1], true);
+        hasDocUpdate = true;
       }
     } else if (spec[2] === 'bills') {
       var bCol = columnIndexByHeader_(sheetName, spec[0], sheet);
@@ -991,6 +1091,9 @@ function upsertRow_(sheetName, payload, forcedId) {
       }
     }
   });
+  if (hasDocUpdate) {
+    syncRowDocsToLinkedSheets_(sheet, sheetName, targetRow);
+  }
 
   return readRowRecord_(sheetName, sheet, targetRow);
 }
@@ -1144,6 +1247,7 @@ function updateRecordFull(sheetName, idValue, payload) {
     sheet.getRange(rowIndex, 1, 1, numHeaders).setValues([row.slice(0, numHeaders)]);
 
     var specs = columnSpecs_(sheetName);
+    var hasDocUpdate = false;
     specs.forEach(function (spec) {
       if (spec[2] === 'doc') {
         var col = columnIndexByHeader_(sheetName, spec[0], sheet);
@@ -1151,7 +1255,8 @@ function updateRecordFull(sheetName, idValue, payload) {
           var docToSave = (payload && payload[spec[1]] !== undefined)
             ? payload[spec[1]]
             : reconcileDocCell_(existing[col - 1], existingRich[col - 1], existingNotes[col - 1]);
-          writeDocCell_(sheet, rowIndex, col, docToSave, spec[1]);
+          writeDocCell_(sheet, rowIndex, col, docToSave, spec[1], true);
+          hasDocUpdate = true;
         }
       } else if (spec[2] === 'bills') {
         var bCol = columnIndexByHeader_(sheetName, spec[0], sheet);
@@ -1163,6 +1268,9 @@ function updateRecordFull(sheetName, idValue, payload) {
         }
       }
     });
+    if (hasDocUpdate) {
+      syncRowDocsToLinkedSheets_(sheet, sheetName, rowIndex);
+    }
 
     return { success: true, sheet: sheetName, id: idValue, record: readRowRecord_(sheetName, sheet, rowIndex) };
   });
@@ -1348,78 +1456,153 @@ function guessDocType_(mimeType, fileName) {
 }
 
 /**
- * Appends a new file revision into any [DOC] column (Rough Sizes, Vendor Quote,
- * Our Quote, PO Order, Bills). All slots support unlimited multiple files.
+ * Batch-uploads multiple document slots (e.g. roughSizes, vendorQuote, ourQuote, poOrder)
+ * in a single call. Uploads to Drive outside the sheet lock, then writes all slots
+ * and synchronizes linked operational sheets in ONE single pass.
+ *
+ * @param {string} sheetName - e.g. SHEET.QUOTATION_MASTER or SHEET.PO_MASTER
+ * @param {string} recordId  - e.g. 'QT-UPVC-0001'
+ * @param {Array<Object>} filePayloads - Array of { docKey, base64Data, mimeType, fileName }
  */
-function uploadRecordFile(sheetName, recordId, docKey, base64Data, mimeType, fileName, options) {
+function uploadRecordFilesBatch(sheetName, recordId, filePayloads) {
+  if (!HEADERS[sheetName] && SHEET[sheetName]) sheetName = SHEET[sheetName];
   if (!HEADERS[sheetName]) throw new Error('Unknown sheet: ' + sheetName);
-  var spec = columnSpecByKey_(sheetName, docKey);
-  if (!spec || spec[2] !== 'doc') throw new Error('Column "' + docKey + '" is not a [DOC] column.');
+  if (!Array.isArray(filePayloads) || !filePayloads.length) {
+    return { success: true, id: recordId, uploaded: {} };
+  }
 
   var sheet = getSheet_(sheetName, false);
-  var rowIndex = findRowById_(sheetName, sheet, recordId);
-  if (rowIndex < 0) throw new Error('Record not found in ' + sheetName + ' -> ' + recordId);
-
-  var base64 = String(base64Data || '');
-  if (!base64) throw new Error('Empty file payload for ' + fileName);
-  var comma = base64.indexOf(',');
-  if (comma > -1 && base64.substring(0, comma).indexOf('base64') > -1) {
-    base64 = base64.substring(comma + 1);
+  if (findRowById_(sheetName, sheet, recordId) < 0) {
+    throw new Error('Record not found in ' + sheetName + ' -> ' + recordId);
   }
 
-  var safeName = String(fileName || 'upload').replace(/[\\\/:*?"<>|]/g, '_');
+  // 1. Upload all files to Drive FIRST (outside the Sheet Lock so network I/O doesn't block the sheet)
   var folder = getRecordFolder_(recordId);
-  var blob = Utilities.newBlob(Utilities.base64Decode(base64), mimeType || 'application/octet-stream', safeName);
-  var file = folder.createFile(blob);
+  var preparedBySlot = {}; // { docKey: { spec: spec, attachment: attachment } }
 
-  if (SHARE_UPLOADS_WITH_LINK) {
-    try {
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    } catch (err) {
-      Logger.log('Sharing skipped for ' + safeName + ': ' + err);
+  filePayloads.forEach(function (item) {
+    if (!item || !item.docKey || !item.base64Data) return;
+    var spec = columnSpecByKey_(sheetName, item.docKey);
+    if (!spec || spec[2] !== 'doc') return;
+
+    var base64 = String(item.base64Data || '');
+    var comma = base64.indexOf(',');
+    if (comma > -1 && base64.substring(0, comma).indexOf('base64') > -1) {
+      base64 = base64.substring(comma + 1);
     }
-  }
 
-  var fileId = file.getId();
-  var attachOptions = options || {};
-  var attachment = {
-    id: fileId,
-    name: file.getName(),
-    url: file.getUrl(),
-    previewUrl: 'https://drive.google.com/file/d/' + fileId + '/preview',
-    thumbnailUrl: 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w800',
-    downloadUrl: 'https://drive.google.com/uc?export=download&id=' + fileId,
-    type: guessDocType_(mimeType, safeName),
-    mime: mimeType || '',
-    size: Number(file.getSize()) || Math.floor(base64.replace(/=+$/, '').length * 3 / 4),
-    uploadedAt: new Date().toISOString()
-  };
+    var safeName = String(item.fileName || 'upload').replace(/[\\\/:*?"<>|]/g, '_');
+    var mimeType = item.mimeType || 'application/octet-stream';
+    var bytes = Utilities.base64Decode(base64);
+    var blob = Utilities.newBlob(bytes, mimeType, safeName);
+    var file = folder.createFile(blob);
 
-  if (docKey === 'bills') {
-    attachment.amount = toAmount_(attachOptions.amount);
-  }
+    if (SHARE_UPLOADS_WITH_LINK) {
+      try {
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (err) {
+        Logger.log('Sharing skipped for ' + safeName + ': ' + err);
+      }
+    }
 
-  return withLock_(function () {
-    var currentRow = findRowById_(sheetName, sheet, recordId);
-    if (currentRow < 0) throw new Error('Record not found in ' + sheetName + ' -> ' + recordId);
-
-    var col = columnIndexByHeader_(sheetName, spec[0], sheet);
-
-    // Each upload slot strictly holds ONE file revision.
-    // Uploading a revised quotation/drawing replaces the previous file.
-    var files = [attachment];
-    writeDocCell_(sheet, currentRow, col, files, docKey);
-
-    return {
-      success: true,
-      sheet: sheetName,
-      id: recordId,
-      docKey: docKey,
-      column: spec[0],
-      file: attachment,
-      files: files
+    var fileId = file.getId();
+    preparedBySlot[item.docKey] = {
+      spec: spec,
+      attachment: {
+        id: fileId,
+        name: safeName,
+        url: file.getUrl(),
+        previewUrl: 'https://drive.google.com/file/d/' + fileId + '/preview',
+        thumbnailUrl: 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w800',
+        downloadUrl: 'https://drive.google.com/uc?export=download&id=' + fileId,
+        type: guessDocType_(mimeType, safeName),
+        mime: mimeType,
+        size: bytes.length,
+        uploadedAt: new Date().toISOString()
+      }
     };
   });
+
+  // 2. Acquire lock ONCE and write all uploaded slots + sync once
+  try {
+    return withLock_(function () {
+      var currentRow = findRowById_(sheetName, sheet, recordId);
+      if (currentRow < 0) throw new Error('Record not found in ' + sheetName + ' -> ' + recordId);
+
+      var uploadedResult = {};
+      var docKeys = Object.keys(preparedBySlot);
+
+      docKeys.forEach(function (docKey) {
+        var entry = preparedBySlot[docKey];
+        var col = columnIndexByHeader_(sheetName, entry.spec[0], sheet);
+        if (col > 0) {
+          var cellRange = sheet.getRange(currentRow, col);
+          var oldFiles = reconcileDocCell_(cellRange.getValue(), cellRange.getRichTextValue(), cellRange.getNote());
+
+          // Skip individual sync; we will sync all slots together below
+          writeDocCell_(sheet, currentRow, col, [entry.attachment], docKey, true);
+          uploadedResult[docKey] = [entry.attachment];
+
+          // Trash superseded file(s) from Drive
+          oldFiles.forEach(function (oldFile) {
+            var oldDriveId = oldFile.id || driveIdFromUrl_(oldFile.url);
+            if (oldDriveId && oldDriveId !== entry.attachment.id) {
+              try {
+                var oldDriveFile = DriveApp.getFileById(oldDriveId);
+                if (isManagedFile_(oldDriveFile)) oldDriveFile.setTrashed(true);
+              } catch (trashErr) {
+                Logger.log('Old revision trash skipped for ' + oldDriveId + ': ' + trashErr);
+              }
+            }
+          });
+        }
+      });
+
+      // Sync all updated doc cells to linked FMS sheets in a SINGLE pass
+      syncRowDocsToLinkedSheets_(sheet, sheetName, currentRow);
+
+      return {
+        success: true,
+        sheet: sheetName,
+        id: recordId,
+        uploaded: uploadedResult,
+        record: readRowRecord_(sheetName, sheet, currentRow)
+      };
+    });
+  } catch (err) {
+    // If saving to the sheet failed/timed out, clean up the newly created Drive file(s)
+    Object.keys(preparedBySlot).forEach(function (k) {
+      try {
+        var fId = preparedBySlot[k].attachment.id;
+        DriveApp.getFileById(fId).setTrashed(true);
+      } catch (cleanupErr) { }
+    });
+    throw err;
+  }
+}
+
+/**
+ * Replaces the file in any [DOC] column (Rough Sizes, Vendor Quote,
+ * Our Quote, PO Order) and trashes the superseded Drive file.
+ * Wrapper around uploadRecordFilesBatch for backward compatibility.
+ */
+function uploadRecordFile(sheetName, recordId, docKey, base64Data, mimeType, fileName) {
+  var batchRes = uploadRecordFilesBatch(sheetName, recordId, [{
+    docKey: docKey,
+    base64Data: base64Data,
+    mimeType: mimeType,
+    fileName: fileName
+  }]);
+  var uploaded = (batchRes.uploaded && batchRes.uploaded[docKey]) || [];
+  return {
+    success: true,
+    sheet: sheetName,
+    id: recordId,
+    docKey: docKey,
+    column: columnSpecByKey_(sheetName, docKey) ? columnSpecByKey_(sheetName, docKey)[0] : '',
+    file: uploaded[0] || null,
+    files: uploaded
+  };
 }
 
 /* ==========================================================================
@@ -1561,11 +1744,7 @@ function writeBillsTotal_(sheet, rowIndex, sheetName, files) {
   return total;
 }
 
-/**
- * Deletes a specific file from a [DOC] cell (by Drive File ID, URL, or index)
- * and moves the managed Drive file to trash.
- */
-function deleteRecordFile(sheetName, recordId, docKey, fileIdOrIndex) {
+function deleteRecordFile(sheetName, recordId, docKey) {
   if (!HEADERS[sheetName]) throw new Error('Unknown sheet: ' + sheetName);
   var spec = columnSpecByKey_(sheetName, docKey);
   if (!spec || spec[2] !== 'doc') throw new Error('Not a [DOC] column: ' + docKey);
@@ -1577,30 +1756,11 @@ function deleteRecordFile(sheetName, recordId, docKey, fileIdOrIndex) {
 
     var col = columnIndexByHeader_(sheetName, spec[0], sheet);
     var cellRange = sheet.getRange(rowIndex, col);
-    var files = reconcileDocCell_(cellRange.getValue(), cellRange.getRichTextValue(), cellRange.getNote());
-    var removed = null;
-    var remaining = [];
+    var existing = reconcileDocCell_(cellRange.getValue(), cellRange.getRichTextValue(), cellRange.getNote());
+    var removed = existing.length ? existing[0] : null;
 
-    files.forEach(function (file, idx) {
-      var target = String(fileIdOrIndex);
-      var matched = (file.id && String(file.id) === target) ||
-        (file.url && String(file.url) === target) ||
-        ('idx:' + idx === target);
-      if (matched && !removed) {
-        removed = file;
-        return;
-      }
-      remaining.push(file);
-    });
-
-    writeDocCell_(sheet, rowIndex, col, remaining, docKey);
-
-    var billsTotal = null;
-    if (docKey === 'bills') {
-      var totalCol = columnIndexByHeader_(sheetName, 'Bills AMT', sheet);
-      billsTotal = sumBillAmounts_(remaining);
-      if (totalCol) sheet.getRange(rowIndex, totalCol).setValue(billsTotal > 0 ? billsTotal : '');
-    }
+    // Clear cell & sync empty state to linked sheets
+    writeDocCell_(sheet, rowIndex, col, [], docKey);
 
     if (removed) {
       var driveId = removed.id || driveIdFromUrl_(removed.url);
@@ -1620,8 +1780,7 @@ function deleteRecordFile(sheetName, recordId, docKey, fileIdOrIndex) {
       id: recordId,
       docKey: docKey,
       removed: removed,
-      files: remaining,
-      billsAmt: billsTotal
+      files: []
     };
   });
 }
@@ -1763,9 +1922,17 @@ function letterToColumn_(letter) {
  * the record matching column (Client / Site Name or ID), and the document columns.
  */
 function getSheetDocColumnMapping_(dstSheet, masterSheetName) {
+  var dName = dstSheet.getName();
+  var cacheKey = dName + '|' + masterSheetName;
+  if (_sheetMappingCache[cacheKey]) return _sheetMappingCache[cacheKey];
+
   var lastRow = dstSheet.getLastRow();
   var lastCol = dstSheet.getLastColumn();
-  if (lastRow < 1 || lastCol < 1) return { headerRow: 6, idCol: 0, siteCol: 0, docCols: {} };
+  if (lastRow < 1 || lastCol < 1) {
+    var emptyRes = { headerRow: 6, idCol: 0, siteCol: 0, docCols: {} };
+    _sheetMappingCache[cacheKey] = emptyRes;
+    return emptyRes;
+  }
 
   var docSpecs = columnSpecs_(masterSheetName).filter(function (s) { return s[2] === 'doc'; });
   var idSpec = columnSpecs_(masterSheetName)[0];
@@ -1893,12 +2060,14 @@ function getSheetDocColumnMapping_(dstSheet, masterSheetName) {
     }
   }
 
-  return {
+  var res = {
     headerRow: headerRow,
     idCol: idCol,
     siteCol: siteCol,
     docCols: docCols
   };
+  _sheetMappingCache[cacheKey] = res;
+  return res;
 }
 
 /**
