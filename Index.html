@@ -589,16 +589,10 @@
 
             <!-- Controls Right -->
             <div class="flex items-center gap-[0.5rem] shrink-0">
-                <button type="button" class="btn btn-ghost px-[0.5rem] text-amber-600 dark:text-amber-400"
-                    ng-click="loadDemoData()" title="Load Sample Demo Data">
-                    <i class="fa-solid fa-wand-magic-sparkles text-[0.875rem]"></i>
-                    <span class="font-mono text-[0.6875rem] hidden xl:inline">Demo Data</span>
-                </button>
-
                 <button type="button" class="btn btn-ghost px-[0.5rem]" ng-click="syncSheetData()"
-                    title="Sync Latest Changes from Google Sheet">
+                    title="Refresh Data from Google Sheet">
                     <i class="fa-solid fa-rotate text-[0.875rem] text-[#10B981]"></i>
-                    <span class="font-mono text-[0.6875rem] hidden xl:inline">Sync Sheet</span>
+                    <span class="font-mono text-[0.6875rem] hidden xl:inline">Refresh</span>
                 </button>
 
                 <button type="button" class="btn btn-ghost px-[0.5rem]" ng-click="switchStage('analytics')"
@@ -661,7 +655,7 @@
                                 class="material-symbols-outlined text-[1rem] text-[var(--accent-blue)]">table_view</span>
                             <h2 class="font-mono text-[0.8125rem] font-bold whitespace-nowrap">uPVC_Quotation_Master
                             </h2>
-                            <span class="chip">15 Cols &bull; Multi-File Enabled</span>
+                            <span class="chip">15 Cols</span>
                             <span class="font-mono text-[0.625rem] text-[var(--text-muted)]">{{ filteredMaster.length ||
                                 0 }} shown</span>
                         </div>
@@ -686,7 +680,7 @@
                         </div>
                     </div>
 
-                    <div class="theme-bg-table-body flex-1 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
+                    <div class="theme-bg-table-body flex-1 min-h-0 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
                         <table class="w-full min-w-[1050px] table-fixed border-collapse text-left">
                             <thead class="theme-bg-table-head sticky top-0 z-20 border-b border-[var(--border-main)]">
                                 <tr class="h-[2.5rem] font-mono text-[0.625rem] uppercase tracking-wider">
@@ -721,7 +715,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[var(--border-main)] font-mono text-[0.75rem]">
-                                <tr ng-repeat="row in (filteredMaster = (db.master | filter:masterFilterFn)) track by row.id"
+                                <tr ng-repeat="row in (filteredMaster = (db.master | filter:masterFilterFn)) track by (row.id ? row.id + '_' + $index : $index)"
                                     class="hover:bg-[var(--bg-surface-sub)] transition-colors">
                                     <td
                                         class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20 text-[var(--text-muted)]">
@@ -736,8 +730,7 @@
                                             class="text-[0.6875rem] text-[var(--text-muted)] truncate flex items-center gap-1">
                                             <i class="fa-solid fa-store text-[0.5625rem] opacity-60"></i>
                                             <span>{{ row.vendor || '—' }}</span>
-                                            <span class="chip chip-id text-[0.5625rem] py-0 px-1 ml-1">{{ row.id
-                                                }}</span>
+                                            <span ng-if="row.id" class="chip chip-id text-[0.5625rem] py-0 px-1 ml-1">{{ row.id }}</span>
                                         </div>
                                     </td>
                                     <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
@@ -835,7 +828,7 @@
                             <h2 class="font-mono text-[0.8125rem] font-bold whitespace-nowrap">
                                 uPVC_Purchase_Order_Master</h2>
                             <span class="chip">19 Cols</span>
-                            <span class="chip chip-doc">5 Multi-File Slots</span>
+                            <span class="chip chip-doc">5 Document Slots</span>
                             <span class="font-mono text-[0.625rem] text-[var(--text-muted)]">{{ filteredPO.length || 0
                                 }} shown</span>
                         </div>
@@ -863,25 +856,28 @@
                         </div>
                     </div>
 
-                    <div class="theme-bg-table-body flex-1 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
+                    <div class="theme-bg-table-body flex-1 min-h-0 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
                         <table class="w-full min-w-[1050px] table-fixed border-collapse text-left">
                             <thead class="theme-bg-table-head sticky top-0 z-20 border-b border-[var(--border-main)]">
                                 <tr class="h-[2.5rem] font-mono text-[0.625rem] uppercase tracking-wider">
+                                    <th
+                                        class="w-[2.5%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        #</th>
                                     <th class="w-[5.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">PO Date
                                     </th>
                                     <th
-                                        class="w-[17%] px-[0.625rem] leading-tight border-r border-[var(--border-main)]/30">
+                                        class="w-[16%] px-[0.625rem] leading-tight border-r border-[var(--border-main)]/30">
                                         <div>Client / Site Name</div>
                                         <div class="text-[0.5625rem] text-[var(--text-muted)] font-normal normal-case">
                                             Vendor Name</div>
                                     </th>
-                                    <th class="w-[11.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Location
+                                    <th class="w-[10.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Location
                                     </th>
-                                    <th class="w-[13.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Variant
+                                    <th class="w-[12.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Variant
                                     </th>
                                     <th class="w-[7.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Mesh /
                                         Jaali</th>
-                                    <th class="w-[14%] px-[0.5rem] border-r border-[var(--border-main)]/30">Glass Specs
+                                    <th class="w-[13%] px-[0.5rem] border-r border-[var(--border-main)]/30">Glass Specs
                                     </th>
                                     <th class="w-[3%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
                                         Qty</th>
@@ -889,16 +885,19 @@
                                         class="w-[3.5%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
                                         Lead Time</th>
                                     <th
-                                        class="w-[8.5%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
+                                        class="w-[9%] px-[0.25rem] text-center border-r border-[var(--border-main)]/30">
                                         DWG / PO Order</th>
-                                    <th class="w-[12.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Uploads
+                                    <th class="w-[13.5%] px-[0.5rem] border-r border-[var(--border-main)]/30">Uploads
                                         &amp; Amounts</th>
                                     <th class="w-[3.5%] px-[0.5rem] text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[var(--border-main)] font-mono text-[0.75rem]">
-                                <tr ng-repeat="row in (filteredPO = (db.po | filter:poFilterFn)) track by row.id"
+                                <tr ng-repeat="row in (filteredPO = (db.po | filter:poFilterFn)) track by (row.id ? row.id + '_' + $index : $index)"
                                     class="hover:bg-[var(--bg-surface-sub)] transition-colors">
+                                    <td
+                                        class="px-[0.25rem] py-[0.45rem] text-center border-r border-[var(--border-main)]/20 text-[var(--text-muted)]">
+                                        {{ $index + 1 }}</td>
                                     <td
                                         class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 whitespace-nowrap">
                                         {{ row.date | limitTo:10 }}</td>
@@ -909,8 +908,7 @@
                                             class="text-[0.6875rem] text-[var(--text-muted)] truncate flex items-center gap-1">
                                             <i class="fa-solid fa-store text-[0.5625rem] opacity-60"></i>
                                             <span>{{ row.vendor || '—' }}</span>
-                                            <span class="chip chip-id text-[0.5625rem] py-0 px-1 ml-1">{{ row.id
-                                                }}</span>
+                                            <span ng-if="row.id" class="chip chip-id text-[0.5625rem] py-0 px-1 ml-1">{{ row.id }}</span>
                                         </div>
                                     </td>
                                     <td class="px-[0.5rem] py-[0.45rem] border-r border-[var(--border-main)]/20 truncate"
@@ -969,7 +967,7 @@
                                     </td>
                                 </tr>
                                 <tr ng-if="!filteredPO.length">
-                                    <td colspan="11" class="py-[3rem] text-center text-[var(--text-muted)] font-mono">
+                                    <td colspan="12" class="py-[3rem] text-center text-[var(--text-muted)] font-mono">
                                         No purchase orders match the selected criteria.
                                     </td>
                                 </tr>
@@ -2037,20 +2035,9 @@
                             $scope.showToast('Connected', 'Google Sheets data synchronized.', 'success');
                         }
                     })
-                    .catch(function () {
-                        // Fallback to local stored or demo data
-                        var stored = localStorage.getItem('upvc_local_db');
-                        if (stored) {
-                            try {
-                                var p = JSON.parse(stored);
-                                $scope.db.master = (p.masterQuotations || []).map($scope.normalizeRecord);
-                                $scope.db.po = (p.purchaseOrders || []).map($scope.normalizeRecord);
-                                if (p.config) $scope.db.config = p.config;
-                            } catch (e) { }
-                        }
-                        if (!$scope.db.master.length && !$scope.db.po.length) {
-                            $scope.loadDemoData();
-                        }
+                    .catch(function (err) {
+                        var msg = (err && err.message) ? err.message : 'Could not fetch data from Google Sheets.';
+                        $scope.showToast('Connection Error', msg, 'danger');
                     })
                     .finally(function () {
                         $scope.hideLoader();
@@ -2641,79 +2628,7 @@
                 return counts;
             };
 
-            // ----------------------------------------------------
-            // DEMO DATA GENERATOR
-            // ----------------------------------------------------
-            $scope.loadDemoData = function () {
-                $scope.db.master = [
-                    {
-                        id: 'QT-UPVC-0001',
-                        site: 'Prestige Falcon City - Tower 4',
-                        date: '2026-10-14',
-                        location: 'Kanakapura Road, Bengaluru',
-                        vendor: 'NCL',
-                        variant: '3-Track Sliding',
-                        mesh: 'SS 304 Mesh',
-                        glass: '6mm Clear Toughened',
-                        qty: 14,
-                        leadTime: 15,
-                        roughSizes: [{ id: 'demo_dwg_01', name: 'Tower4_Window_Schedule.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 348160 }],
-                        vendorQuote: [{ id: 'demo_vq_01', name: 'NCL_Quote_Ref_9821.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 184320 }],
-                        ourQuote: [{ id: 'demo_oq_01', name: 'Quotation_PFC_Tower4_Final.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 225280 }],
-                        vendorAmount: 210000,
-                        ourAmount: 285000,
-                        bills: []
-                    },
-                    {
-                        id: 'QT-UPVC-0002',
-                        site: 'Oberoi Sky City - Penthouse B',
-                        date: '2026-10-16',
-                        location: 'Borivali East, Mumbai',
-                        vendor: 'Kommerling',
-                        variant: 'Slide & Fold',
-                        mesh: 'None',
-                        glass: 'Double Glazed (DGU)',
-                        qty: 6,
-                        leadTime: 20,
-                        roughSizes: [{ id: 'demo_dwg_02', name: 'PenthouseB_Balcony_Opening.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 412000 }],
-                        vendorQuote: [],
-                        ourQuote: [],
-                        vendorAmount: 345000,
-                        ourAmount: 490000,
-                        bills: []
-                    }
-                ];
 
-                $scope.db.po = [
-                    {
-                        id: 'PO-UPVC-0001',
-                        quotationId: 'QT-UPVC-0000',
-                        site: 'Godrej Woods - Villa 12',
-                        date: '2026-10-12',
-                        location: 'Sector 43, Noida',
-                        vendor: 'Prominance',
-                        variant: 'Casement Window',
-                        mesh: 'SS 304 Mesh',
-                        glass: '5mm Clear Toughened',
-                        qty: 8,
-                        leadTime: 12,
-                        poOrder: [{ id: 'demo_po_01', name: 'Official_PO_Godrej_Woods.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', size: 199680 }],
-                        vendorAmount: 145000,
-                        ourAmount: 210000,
-                        bills: [
-                            { date: '2026-10-16', invoiceNo: 'INV-PA-3021', amount: 145000 }
-                        ],
-                        billsAmt: 145000
-                    }
-                ];
-
-                localStorage.setItem('upvc_local_db', JSON.stringify({
-                    masterQuotations: $scope.db.master,
-                    purchaseOrders: $scope.db.po,
-                    config: $scope.db.config
-                }));
-                $scope.showToast('Demo Data Loaded', 'Sample quotations & POs populated.', 'success');
-            };
 
             // Start application
             $scope.initData();

@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  *  uPVC FMS - Google Apps Script Backend (Web.js)
- *  Production-Ready: Sheet-First 2-Way Sync + Multi-File Revisions on All Slots
+ *  Production-Ready: Sheet-First 2-Way Sync + Single File per Upload Slot
  * ============================================================================
  */
 
@@ -154,9 +154,6 @@ function onOpen() {
       .addItem('\uD83D\uDDA5\uFE0F Open Web App Portal', 'showWebAppDialog')
       .addSeparator()
       .addItem('\uD83D\uDD27 Initialize / Repair Database', 'initDatabase')
-      .addItem('\uD83D\uDCE5 Seed Demo Data (Sample Quotations & POs)', 'seedDemoData')
-      .addItem('\uD83D\uDD04 Sync Document Links to FMS Sheets (uPVC PO & Quotation)', 'syncAllDocLinksToAllSheets')
-      .addItem('\uD83D\uDD17 Convert All Document Cells to Clickable Links', 'migrateAllDocsToRichText')
       .addItem('\uD83C\uDD94 Repair Legacy Data (Backfill IDs)', 'repairLegacyIds')
       .addToUi();
 
@@ -617,32 +614,15 @@ function buildDocRichText_(files, docKey) {
 
 function writeDocCell_(sheet, rowIndex, col, files, docKey, skipSync) {
   var list = parseDocs_(files);
-  var richText = buildDocRichText_(list, docKey);
+  var file = list.length ? list[0] : null;
+  var singleList = file ? [file] : [];
+  var richText = buildDocRichText_(singleList, docKey);
   var range = sheet.getRange(rowIndex, col);
-  var noteStr = list.length ? JSON.stringify(list) : '';
+  var noteStr = singleList.length ? JSON.stringify(singleList) : '';
   range.setRichTextValue(richText);
   range.setNote(noteStr);
   range.setWrap(true);
-
-  if (!skipSync) {
-    try {
-      var sName = sheet.getName();
-      if (sName === SHEET.QUOTATION_MASTER || sName === SHEET.PO_MASTER) {
-        var idCol = (columnIndexMap_(sName, sheet)[0] >= 0) ? (columnIndexMap_(sName, sheet)[0] + 1) : 1;
-        var recordId = String(sheet.getRange(rowIndex, idCol).getValue() || '').trim();
-        var siteCol = columnIndexByHeader_(sName, 'Client / Site Name', sheet);
-        var siteName = siteCol ? String(sheet.getRange(rowIndex, siteCol).getValue() || '').trim() : '';
-        var qIdCol = (sName === SHEET.PO_MASTER) ? columnIndexByHeader_(sName, 'Quotation ID', sheet) : 0;
-        var qId = qIdCol ? String(sheet.getRange(rowIndex, qIdCol).getValue() || '').trim() : '';
-
-        syncDocCellToLinkedSheets_(sName, recordId, siteName, qId, docKey, richText, noteStr);
-      }
-    } catch (syncErr) {
-      Logger.log('Linked sheet sync skipped for row ' + rowIndex + ': ' + syncErr);
-    }
-  }
-
-  return list;
+  return singleList;
 }
 
 // In-memory cache for sheet header/column mappings so we never re-scan workbook tabs multiple times per execution
@@ -755,22 +735,18 @@ function syncRowDocsToLinkedSheets_(sheet, sheetName, rowIndex) {
 function parseRichTextDocs_(richText) {
   if (!richText) return [];
   var runs = (typeof richText.getRuns === 'function') ? richText.getRuns() : [];
-  var out = [];
-  var seenUrls = {};
-  runs.forEach(function (run) {
+  for (var i = 0; i < runs.length; i++) {
+    var run = runs[i];
     var url = run.getLinkUrl();
-    if (!url) return;
+    if (!url) continue;
     var text = String(run.getText() || '').trim();
-    if (!text) return;
-    var key = url + '|' + text;
-    if (seenUrls[key]) return;
-    seenUrls[key] = true;
+    if (!text) continue;
 
     var driveId = driveIdFromUrl_(url);
     var dateMatch = text.match(/^(\d{1,4}[-\/]\d{1,2}[-\/]\d{2,4})/);
     var nameMatch = text.match(/([a-zA-Z0-9_\-]+_\d+)/i);
     var cleanName = nameMatch ? nameMatch[1] : (text.replace(/^(\d{1,4}[-\/]\d{1,2}[-\/]\d{2,4})\s+/, '').trim() || 'Attachment');
-    out.push({
+    return [{
       id: driveId,
       name: cleanName,
       url: url,
@@ -779,16 +755,16 @@ function parseRichTextDocs_(richText) {
       type: guessDocType_('', cleanName),
       amount: 0,
       uploadedAt: dateMatch ? dateMatch[1] : ''
-    });
-  });
-  return out;
+    }];
+  }
+  return [];
 }
 
 /**
  * Reconciles manual Google Sheet cell edits with the hidden Cell Note JSON.
  * - If the user cleared the cell in Google Sheets, returns [].
- * - If the user pasted new URLs or deleted a link line in Google Sheets,
- *   updates the file list while preserving rich metadata from the Note for matching files.
+ * - If the user pasted a new URL or edited the link in Google Sheets,
+ *   preserves rich metadata from the Note if matching, or updates to the new file.
  */
 function reconcileDocCell_(rawVal, richVal, noteStr) {
   var text = String(rawVal === null || rawVal === undefined ? '' : rawVal).trim();
@@ -812,28 +788,21 @@ function reconcileDocCell_(rawVal, richVal, noteStr) {
 
 function serializeDocs_(value, docKey) {
   if (value === null || value === undefined || value === '') return '';
-  var list = Array.isArray(value) ? value : (typeof value === 'object' ? [value] : []);
-  if (list.length === 0) {
-    var str = String(value).trim();
-    if (str && (str.charAt(0) === '[' || str.charAt(0) === '{')) {
-      try {
-        return serializeDocs_(JSON.parse(str), docKey);
-      } catch (e) { }
-    }
-    return str;
-  }
-  return list.map(function (file, index) {
-    return formatDocLine_(file, index, docKey);
-  }).join('\n');
+  var list = parseDocs_(value);
+  if (!list.length) return '';
+  return formatDocLine_(list[0], 0, docKey);
 }
 
 function parseDocs_(value) {
   if (value === null || value === undefined || value === '') return [];
-  if (Array.isArray(value)) return value.filter(Boolean);
+  if (Array.isArray(value)) {
+    var filtered = value.filter(Boolean);
+    return filtered.length ? [filtered[0]] : [];
+  }
   if (typeof value === 'object') {
     if (typeof value.getRuns === 'function') {
       var fromRich = parseRichTextDocs_(value);
-      if (fromRich.length) return fromRich;
+      if (fromRich.length) return [fromRich[0]];
       value = value.getText ? value.getText() : '';
     } else {
       return [value];
@@ -848,22 +817,23 @@ function parseDocs_(value) {
     try {
       var parsed = JSON.parse(text);
       var arr = Array.isArray(parsed) ? parsed : [parsed];
-      return arr.filter(function (item) {
+      var valid = arr.filter(function (item) {
         return item && (item.id || item.url || item.name);
       });
+      return valid.length ? [valid[0]] : [];
     } catch (err) { }
   }
 
+  // If legacy multi-line text exists in the cell, extract the first valid file
   if (text.indexOf('\n') !== -1) {
     var lines = text.split('\n');
-    var parsedLines = [];
-    lines.forEach(function (ln) {
-      var trimmed = ln.trim();
-      if (!trimmed) return;
+    for (var l = 0; l < lines.length; l++) {
+      var trimmed = lines[l].trim();
+      if (!trimmed) continue;
       var item = parseDocs_(trimmed);
-      if (item && item.length) parsedLines.push(item[0]);
-    });
-    if (parsedLines.length) return parsedLines;
+      if (item && item.length) return [item[0]];
+    }
+    return [];
   }
 
   var cleanUrl = text;
@@ -1427,7 +1397,7 @@ function refreshValidations() {
 }
 
 /* ==========================================================================
- * MULTI-FILE UPLOAD & DELETE ENGINE (Google Drive Backed)
+ * SINGLE-FILE UPLOAD & DELETE ENGINE (Google Drive Backed)
  * ======================================================================== */
 
 function getRootFolder_() {
@@ -1543,18 +1513,19 @@ function uploadRecordFilesBatch(sheetName, recordId, filePayloads) {
           writeDocCell_(sheet, currentRow, col, [entry.attachment], docKey, true);
           uploadedResult[docKey] = [entry.attachment];
 
-          // Trash superseded file(s) from Drive
-          oldFiles.forEach(function (oldFile) {
+          // Trash superseded file from Drive
+          if (oldFiles && oldFiles.length) {
+            var oldFile = oldFiles[0];
             var oldDriveId = oldFile.id || driveIdFromUrl_(oldFile.url);
             if (oldDriveId && oldDriveId !== entry.attachment.id) {
               try {
                 var oldDriveFile = DriveApp.getFileById(oldDriveId);
                 if (isManagedFile_(oldDriveFile)) oldDriveFile.setTrashed(true);
               } catch (trashErr) {
-                Logger.log('Old revision trash skipped for ' + oldDriveId + ': ' + trashErr);
+                Logger.log('Old file trash skipped for ' + oldDriveId + ': ' + trashErr);
               }
             }
-          });
+          }
         }
       });
 
@@ -1846,64 +1817,9 @@ function repairSheetIds_(sheetName, prefix, familySheets) {
   return assigned;
 }
 
-function migrateAllDocsToRichText() {
-  var targetSheets = [SHEET.QUOTATION_MASTER, SHEET.PO_MASTER];
-  var convertedCount = 0;
-  var details = [];
-
-  targetSheets.forEach(function (sheetName) {
-    var sheet = getSheet_(sheetName, false);
-    if (!sheet) return;
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return;
-
-    var specs = columnSpecs_(sheetName);
-    var docSpecs = specs.filter(function (s) { return s[2] === 'doc'; });
-    var sheetConverted = 0;
-
-    docSpecs.forEach(function (spec) {
-      var col = columnIndexByHeader_(sheetName, spec[0], sheet);
-      if (!col) return;
-
-      var range = sheet.getRange(2, col, lastRow - 1, 1);
-      var values = range.getValues();
-      var richVals = range.getRichTextValues();
-      var notes = range.getNotes();
-
-      for (var i = 0; i < values.length; i++) {
-        var rowIndex = i + 2;
-        var files = reconcileDocCell_(values[i][0], richVals[i][0], notes[i][0]);
-        if (files && files.length) {
-          writeDocCell_(sheet, rowIndex, col, files, spec[1], true);
-          if (spec[1] === 'bills') {
-            writeBillsTotal_(sheet, rowIndex, sheetName, files);
-          }
-          sheetConverted++;
-        }
-      }
-    });
-
-    convertedCount += sheetConverted;
-    details.push(sheetName + ': ' + sheetConverted + ' document cell(s) formatted');
-  });
-
-  // Automatically propagate converted links to any linked operational sheets (uPVC PO, uPVC Quotation)
-  try {
-    syncAllDocLinksToAllSheets(true);
-  } catch (errSync) {
-    Logger.log('Automatic syncAllDocLinksToAllSheets warning: ' + errSync);
-  }
-
-  var msg = 'Migration complete. ' + convertedCount + ' document cell(s) converted to clickable hyperlinks.\n' + details.join('\n');
-  try {
-    SpreadsheetApp.getUi().alert('Document Links Conversion', msg, SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) { }
-  return { success: true, convertedCount: convertedCount, details: details };
-}
-
 /* ==========================================================================
  * LINKED FMS SHEET RICH-TEXT SYNC ENGINE (OPTION B)
- * Propagates multi-file clickable hyperlinks to operational sheets (e.g. uPVC PO,
+ * Propagates clickable hyperlinks to operational sheets (e.g. uPVC PO,
  * uPVC Quotation) that reference master records via =INDEX() formulas or
  * Client / Site Name lookups.
  * ======================================================================== */
@@ -2068,728 +1984,4 @@ function getSheetDocColumnMapping_(dstSheet, masterSheetName) {
   };
   _sheetMappingCache[cacheKey] = res;
   return res;
-}
-
-/**
- * Synchronizes a single document cell update across all linked operational sheets.
- */
-function syncDocCellToLinkedSheets_(masterSheetName, recordId, siteName, quotationId, docKey, richText, noteStr) {
-  if (!recordId && !siteName) return;
-  var ss = getSpreadsheet_();
-  var allSheets = ss.getSheets();
-
-  var normId = normHeader_(recordId);
-  var normSite = normHeader_(siteName);
-  var normQId = normHeader_(quotationId);
-
-  var excludedSheets = [
-    masterSheetName.toLowerCase(),
-    SHEET.CONFIG_DROPDOWNS.toLowerCase(),
-    'setupconfig'
-  ];
-
-  allSheets.forEach(function (dstSheet) {
-    var dName = dstSheet.getName();
-    if (excludedSheets.indexOf(dName.toLowerCase()) > -1) return;
-    if (dName.toLowerCase().indexOf('cancel') > -1 || dName.toLowerCase().indexOf('done') > -1) return;
-    if (dName.toLowerCase() === 'summary' || dName.toLowerCase().indexOf('enquiry') > -1) return;
-
-    var lastRow = dstSheet.getLastRow();
-    var lastCol = dstSheet.getLastColumn();
-    if (lastRow < 2 || lastCol < 1) return;
-
-    var mapping = getSheetDocColumnMapping_(dstSheet, masterSheetName);
-    if (!mapping.docCols[docKey]) return;
-    if (!mapping.siteCol && !mapping.idCol) return;
-
-    var targetCol = mapping.docCols[docKey];
-    var scanStart = mapping.headerRow + 1;
-    var numRows = lastRow - scanStart + 1;
-    if (numRows < 1) return;
-
-    var siteValues = mapping.siteCol ? dstSheet.getRange(scanStart, mapping.siteCol, numRows, 1).getValues() : null;
-    var idValues = mapping.idCol ? dstSheet.getRange(scanStart, mapping.idCol, numRows, 1).getValues() : null;
-
-    for (var i = 0; i < numRows; i++) {
-      var isMatch = false;
-
-      // 1. Match by Client / Site Name (primary for FMS tabs like uPVC PO)
-      if (normSite && siteValues) {
-        var cellSite = normHeader_(siteValues[i][0]);
-        if (cellSite && cellSite === normSite) isMatch = true;
-      }
-
-      // 2. Match by PO ID or Quotation ID
-      if (!isMatch && idValues) {
-        var cellId = normHeader_(idValues[i][0]);
-        if (cellId && (cellId === normId || (normQId && cellId === normQId))) isMatch = true;
-      }
-
-      if (isMatch) {
-        var rIdx = scanStart + i;
-        var cellRange = dstSheet.getRange(rIdx, targetCol);
-        cellRange.setRichTextValue(richText);
-        if (noteStr) cellRange.setNote(noteStr);
-        cellRange.setWrap(true);
-      }
-    }
-  });
-}
-
-/**
- * Bulk-synchronizes all document cells from Master sheets to all linked operational sheets.
- */
-function syncAllDocLinksToAllSheets(silent) {
-  var ss = getSpreadsheet_();
-  var masterSheets = [SHEET.QUOTATION_MASTER, SHEET.PO_MASTER];
-  var totalUpdated = 0;
-  var sheetsUpdated = {};
-
-  masterSheets.forEach(function (masterName) {
-    var masterSheet = ss.getSheetByName(masterName);
-    if (!masterSheet) return;
-    var lastRow = masterSheet.getLastRow();
-    if (lastRow < 2) return;
-
-    var specs = columnSpecs_(masterName).filter(function (s) { return s[2] === 'doc'; });
-    if (!specs.length) return;
-
-    var idCol = (columnIndexMap_(masterName, masterSheet)[0] >= 0) ? (columnIndexMap_(masterName, masterSheet)[0] + 1) : 1;
-    var siteCol = columnIndexByHeader_(masterName, 'Client / Site Name', masterSheet);
-    var qIdCol = (masterName === SHEET.PO_MASTER) ? columnIndexByHeader_(masterName, 'Quotation ID', masterSheet) : 0;
-
-    var idValues = masterSheet.getRange(2, idCol, lastRow - 1, 1).getValues();
-    var siteValues = siteCol ? masterSheet.getRange(2, siteCol, lastRow - 1, 1).getValues() : null;
-    var qIdValues = qIdCol ? masterSheet.getRange(2, qIdCol, lastRow - 1, 1).getValues() : null;
-
-    var masterMapById = {};
-    var masterMapBySite = {};
-
-    specs.forEach(function (spec) {
-      var col = columnIndexByHeader_(masterName, spec[0], masterSheet);
-      if (!col) return;
-      var range = masterSheet.getRange(2, col, lastRow - 1, 1);
-      var richVals = range.getRichTextValues();
-      var notes = range.getNotes();
-
-      for (var r = 0; r < idValues.length; r++) {
-        var recId = normHeader_(idValues[r][0]);
-        var site = siteValues ? normHeader_(siteValues[r][0]) : '';
-        var qId = qIdValues ? normHeader_(qIdValues[r][0]) : '';
-
-        var item = {
-          richText: richVals[r][0],
-          note: notes[r][0]
-        };
-
-        if (recId) {
-          if (!masterMapById[recId]) masterMapById[recId] = {};
-          masterMapById[recId][spec[1]] = item;
-        }
-        if (qId) {
-          if (!masterMapById[qId]) masterMapById[qId] = {};
-          masterMapById[qId][spec[1]] = item;
-        }
-        if (site) {
-          if (!masterMapBySite[site]) masterMapBySite[site] = {};
-          masterMapBySite[site][spec[1]] = item;
-        }
-      }
-    });
-
-    var allSheets = ss.getSheets();
-    allSheets.forEach(function (dstSheet) {
-      var dName = dstSheet.getName();
-      if (dName.toLowerCase() === masterName.toLowerCase()) return;
-      if (dName.toLowerCase() === SHEET.CONFIG_DROPDOWNS.toLowerCase()) return;
-      if (dName.toLowerCase() === 'setupconfig') return;
-      if (dName.toLowerCase().indexOf('cancel') > -1 || dName.toLowerCase().indexOf('done') > -1) return;
-      if (dName.toLowerCase() === 'summary' || dName.toLowerCase().indexOf('enquiry') > -1) return;
-
-      var dLastRow = dstSheet.getLastRow();
-      var dLastCol = dstSheet.getLastColumn();
-      if (dLastRow < 2 || dLastCol < 1) return;
-
-      var mapping = getSheetDocColumnMapping_(dstSheet, masterName);
-      if (!mapping.siteCol && !mapping.idCol) return;
-      if (Object.keys(mapping.docCols).length === 0) return;
-
-      var startRow = mapping.headerRow + 1;
-      var numRows = dLastRow - startRow + 1;
-      if (numRows < 1) return;
-
-      var dstSites = mapping.siteCol ? dstSheet.getRange(startRow, mapping.siteCol, numRows, 1).getValues() : null;
-      var dstIds = mapping.idCol ? dstSheet.getRange(startRow, mapping.idCol, numRows, 1).getValues() : null;
-
-      Object.keys(mapping.docCols).forEach(function (docKey) {
-        var targetCol = mapping.docCols[docKey];
-        for (var i = 0; i < numRows; i++) {
-          var matchedData = null;
-
-          // 1. Match by Client / Site Name
-          if (dstSites) {
-            var sKey = normHeader_(dstSites[i][0]);
-            if (sKey && masterMapBySite[sKey] && masterMapBySite[sKey][docKey]) {
-              matchedData = masterMapBySite[sKey][docKey];
-            }
-          }
-
-          // 2. Match by ID
-          if (!matchedData && dstIds) {
-            var idKey = normHeader_(dstIds[i][0]);
-            if (idKey && masterMapById[idKey] && masterMapById[idKey][docKey]) {
-              matchedData = masterMapById[idKey][docKey];
-            }
-          }
-
-          if (matchedData && matchedData.richText && matchedData.richText.getText().trim()) {
-            var cell = dstSheet.getRange(startRow + i, targetCol);
-            cell.setRichTextValue(matchedData.richText);
-            if (matchedData.note) cell.setNote(matchedData.note);
-            cell.setWrap(true);
-            totalUpdated++;
-            sheetsUpdated[dName] = (sheetsUpdated[dName] || 0) + 1;
-          }
-        }
-      });
-    });
-  });
-
-  SpreadsheetApp.flush();
-
-  var sheetSummary = Object.keys(sheetsUpdated).map(function (k) {
-    return '\u2022 ' + k + ': ' + sheetsUpdated[k] + ' cell(s)';
-  }).join('\n');
-
-  var msg = totalUpdated > 0
-    ? 'Synced ' + totalUpdated + ' document cell(s) across sheet(s):\n' + sheetSummary + '\n\nAll multi-file links are now openable hyperlinks in operational sheets!'
-    : 'No linked document cells required synchronization.';
-
-  if (!silent) {
-    try {
-      SpreadsheetApp.getUi().alert('Document Link Sync Complete', msg, SpreadsheetApp.getUi().ButtonSet.OK);
-    } catch (e) {
-      Logger.log('Sync result: ' + msg);
-    }
-  }
-
-  return { success: true, totalUpdated: totalUpdated, sheetsUpdated: sheetsUpdated };
-}
-
-/* ==========================================================================
- * DEMO DATA SEEDER
- * ======================================================================== */
-
-/**
- * Seeds realistic sample records into uPVC_Quotation_Master and uPVC_Purchase_Order_Master.
- */
-function seedDemoData() {
-  return withLock_(function () {
-    ensureSchema_();
-    var demoQuotes = getSampleQuotations_();
-    demoQuotes.forEach(function (q) {
-      upsertRow_(SHEET.QUOTATION_MASTER, q, q.id);
-    });
-
-    var demoPOs = getSamplePOs_();
-    demoPOs.forEach(function (p) {
-      upsertRow_(SHEET.PO_MASTER, p, p.id);
-    });
-
-    SpreadsheetApp.flush();
-    try {
-      SpreadsheetApp.getActiveSpreadsheet().toast(
-        'Demo data inserted: ' + demoQuotes.length + ' Quotes & ' + demoPOs.length + ' POs',
-        'uPVC FMS',
-        5
-      );
-    } catch (e) { }
-
-    return {
-      success: true,
-      quotationsCount: demoQuotes.length,
-      poCount: demoPOs.length
-    };
-  });
-}
-
-function getSampleQuotations_() {
-  return [
-    {
-      id: 'QT-UPVC-0001',
-      site: 'Prestige Falcon City - Tower 4',
-      date: '2026-10-14',
-      location: 'Kanakapura Road, Bengaluru',
-      vendor: 'NCL',
-      variant: '3-Track Sliding',
-      mesh: 'SS 304 Mesh',
-      glass: '6mm, Clear, Toughened',
-      qty: 14,
-      leadTime: 15,
-      roughSizes: [
-        {
-          id: 'demo_dwg_01',
-          name: 'Tower4_Window_Schedule.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 348160,
-          uploadedAt: '2026-10-14 09:30'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_vq_01',
-          name: 'NCL_Quote_Ref_9821.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 184320,
-          amount: 210000,
-          uploadedAt: '2026-10-15 11:20'
-        }
-      ],
-      vendorAmount: 210000,
-      ourQuote: [
-        {
-          id: 'demo_oq_01',
-          name: 'Quotation_PFC_Tower4_Final.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 225280,
-          amount: 285000,
-          uploadedAt: '2026-10-15 17:00'
-        }
-      ],
-      ourAmount: 285000
-    },
-    {
-      id: 'QT-UPVC-0002',
-      site: 'Oberoi Sky City - Penthouse B',
-      date: '2026-10-15',
-      location: 'Borivali East, Western Express Hwy, Mumbai',
-      vendor: 'Prominance',
-      variant: 'Casement / Openable, Sliding Folding',
-      mesh: 'Pleated Mesh',
-      glass: 'DGU (Double Glazed), 6mm, Clear, Toughened',
-      qty: 22,
-      leadTime: 21,
-      roughSizes: [
-        {
-          id: 'demo_dwg_02',
-          name: 'Penthouse_Glazing_Layout.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 460800,
-          uploadedAt: '2026-10-15 10:15'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_vq_02',
-          name: 'Prominance_UPVC_Special_Fab.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 317440,
-          amount: 480000,
-          uploadedAt: '2026-10-16 14:00'
-        }
-      ],
-      vendorAmount: 480000,
-      ourQuote: [
-        {
-          id: 'demo_oq_02',
-          name: 'Oberoi_SkyCity_Client_Proposal.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 266240,
-          amount: 640000,
-          uploadedAt: '2026-10-16 18:30'
-        }
-      ],
-      ourAmount: 640000
-    },
-    {
-      id: 'QT-UPVC-0003',
-      site: 'Sobha Dream Acres - Villa 58',
-      date: '2026-10-16',
-      location: 'Panathur Road, Balagere, Bengaluru',
-      vendor: 'Grayzo',
-      variant: '2.5-Track Sliding',
-      mesh: 'Fiberglass Mesh',
-      glass: '5mm, Clear, Toughened',
-      qty: 9,
-      leadTime: 12,
-      roughSizes: [
-        {
-          id: 'demo_dwg_03',
-          name: 'Villa58_Site_Measurements.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 194560,
-          uploadedAt: '2026-10-16 12:45'
-        }
-      ],
-      vendorQuote: [],
-      vendorAmount: 0,
-      ourQuote: [],
-      ourAmount: 0
-    },
-    {
-      id: 'QT-UPVC-0004',
-      site: 'Greenfield Commercial Hub - Wing B',
-      date: '2026-10-17',
-      location: 'Hitec City, Phase 2, Hyderabad',
-      vendor: 'Alumil',
-      variant: 'Fix-Light, Ventilator',
-      mesh: 'None',
-      glass: '10mm, Clear, Toughened',
-      qty: 36,
-      leadTime: 25,
-      roughSizes: [
-        {
-          id: 'demo_dwg_04',
-          name: 'Facade_Window_Specs_WingB.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 532480,
-          uploadedAt: '2026-10-17 09:00'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_vq_04',
-          name: 'Alumil_Commercial_Costing.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 286720,
-          amount: 560000,
-          uploadedAt: '2026-10-17 15:30'
-        }
-      ],
-      vendorAmount: 560000,
-      ourQuote: [
-        {
-          id: 'demo_oq_04',
-          name: 'Greenfield_Approved_Commercial_Offer.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 296960,
-          amount: 720000,
-          uploadedAt: '2026-10-18 11:00'
-        }
-      ],
-      ourAmount: 720000
-    },
-    {
-      id: 'QT-UPVC-0005',
-      site: 'Palm Meadows Estate - Villa 14',
-      date: '2026-10-18',
-      location: 'Airport Road, Yelahanka, Bengaluru',
-      vendor: 'WinFrame',
-      variant: 'Door Frames, 2-Track Sliding',
-      mesh: 'SS 304 Mesh',
-      glass: 'Frosted / Obscure, 5mm, Clear, Toughened',
-      qty: 16,
-      leadTime: 14,
-      roughSizes: [
-        {
-          id: 'demo_dwg_05',
-          name: 'Villa14_Opening_Schedule.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 215040,
-          uploadedAt: '2026-10-18 14:20'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_vq_05',
-          name: 'WinFrame_UPVC_Quotation.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 179200,
-          amount: 195000,
-          uploadedAt: '2026-10-18 16:50'
-        }
-      ],
-      vendorAmount: 195000,
-      ourQuote: [],
-      ourAmount: 0
-    }
-  ];
-}
-
-function getSamplePOs_() {
-  return [
-    {
-      id: 'PO-UPVC-0001',
-      quotationId: 'QT-UPVC-0006',
-      site: 'Grand Hyatt Residences - Tower A',
-      date: '2026-10-02',
-      location: 'Bandra Kurla Complex, Mumbai',
-      vendor: 'Prominance',
-      variant: '3-Track Sliding, Ventilator',
-      mesh: 'SS 304 Mesh',
-      glass: '6mm, Clear, Toughened, DGU (Double Glazed)',
-      qty: 28,
-      leadTime: 18,
-      roughSizes: [
-        {
-          id: 'demo_po_dwg_01',
-          name: 'Hyatt_TowerA_Approved_DWG.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 491520,
-          uploadedAt: '2026-10-02 09:15'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_po_vq_01',
-          name: 'Prominance_Final_Billing_Quote.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 215040,
-          amount: 520000,
-          uploadedAt: '2026-10-02 12:30'
-        }
-      ],
-      vendorAmount: 520000,
-      ourQuote: [
-        {
-          id: 'demo_po_oq_01',
-          name: 'Client_Contract_Hyatt_Signed.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 358400,
-          amount: 695000,
-          uploadedAt: '2026-10-03 14:00'
-        }
-      ],
-      ourAmount: 695000,
-      poOrder: [
-        {
-          id: 'demo_po_doc_01',
-          name: 'Official_PO_HYATT_001.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 296960,
-          uploadedAt: '2026-10-04 10:00'
-        }
-      ],
-      bills: [
-        { date: '2026-10-08', invoiceNo: 'INV-PRM-1044', amount: 260000 },
-        { date: '2026-10-15', invoiceNo: 'INV-PRM-1089', amount: 260000 }
-      ],
-      billsAmt: 520000
-    },
-    {
-      id: 'PO-UPVC-0002',
-      quotationId: 'QT-UPVC-0007',
-      site: 'Embassy Boulevard - Luxury Villa 19',
-      date: '2026-10-06',
-      location: 'Bellary Road, Yelahanka, Bengaluru',
-      vendor: 'NCL',
-      variant: 'Casement / Openable',
-      mesh: 'Pleated Mesh',
-      glass: '5mm, Clear, Toughened',
-      qty: 15,
-      leadTime: 14,
-      roughSizes: [
-        {
-          id: 'demo_po_dwg_02',
-          name: 'Villa19_Elevation_CAD.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 317440,
-          uploadedAt: '2026-10-06 11:00'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_po_vq_02',
-          name: 'NCL_Revised_Quote_772.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 194560,
-          amount: 240000,
-          uploadedAt: '2026-10-06 15:40'
-        }
-      ],
-      vendorAmount: 240000,
-      ourQuote: [
-        {
-          id: 'demo_po_oq_02',
-          name: 'Client_Invoice_Quote_EB19.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 209920,
-          amount: 320000,
-          uploadedAt: '2026-10-07 10:15'
-        }
-      ],
-      ourAmount: 320000,
-      poOrder: [
-        {
-          id: 'demo_po_doc_02',
-          name: 'PO_NCL_EB19_Signed.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 184320,
-          uploadedAt: '2026-10-07 14:00'
-        }
-      ],
-      bills: [
-        { date: '2026-10-12', invoiceNo: 'INV-NCL-992', amount: 120000 }
-      ],
-      billsAmt: 120000
-    },
-    {
-      id: 'PO-UPVC-0003',
-      quotationId: '',
-      site: 'Brigade Gateway Commercial Block',
-      date: '2026-10-10',
-      location: 'Rajajinagar, Malleshwaram, Bengaluru',
-      vendor: 'Alumil',
-      variant: 'Sliding Folding',
-      mesh: 'SS 304 Mesh',
-      glass: '10mm, Clear, Toughened',
-      qty: 8,
-      leadTime: 20,
-      roughSizes: [
-        {
-          id: 'demo_po_dwg_03',
-          name: 'Direct_PO_Site_Specs.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 286720,
-          uploadedAt: '2026-10-10 10:00'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_po_vq_03',
-          name: 'Alumil_Direct_Price_Agreed.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 163840,
-          amount: 380000,
-          uploadedAt: '2026-10-10 12:00'
-        }
-      ],
-      vendorAmount: 380000,
-      ourQuote: [
-        {
-          id: 'demo_po_oq_03',
-          name: 'Brigade_Gate_Contract.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 225280,
-          amount: 490000,
-          uploadedAt: '2026-10-10 16:00'
-        }
-      ],
-      ourAmount: 490000,
-      poOrder: [
-        {
-          id: 'demo_po_doc_03',
-          name: 'PO_BrigadeGateway_Signed.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 235520,
-          uploadedAt: '2026-10-11 11:30'
-        }
-      ],
-      bills: [],
-      billsAmt: 0
-    },
-    {
-      id: 'PO-UPVC-0004',
-      quotationId: 'QT-UPVC-0008',
-      site: 'Godrej Woods Phase 1',
-      date: '2026-10-12',
-      location: 'Sector 43, Noida, NCR',
-      vendor: 'Poonam Alu.',
-      variant: '2-Track Sliding',
-      mesh: 'Fiberglass Mesh',
-      glass: '5mm, Clear, Toughened',
-      qty: 40,
-      leadTime: 16,
-      roughSizes: [
-        {
-          id: 'demo_po_dwg_04',
-          name: 'Godrej_UnitPlans_AllWindows.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 634880,
-          uploadedAt: '2026-10-12 09:40'
-        }
-      ],
-      vendorQuote: [
-        {
-          id: 'demo_po_vq_04',
-          name: 'Poonam_Bulk_Pricing.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 220160,
-          amount: 410000,
-          uploadedAt: '2026-10-12 14:10'
-        }
-      ],
-      vendorAmount: 410000,
-      ourQuote: [
-        {
-          id: 'demo_po_oq_04',
-          name: 'Our_Approved_Offer_GW1.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 245760,
-          amount: 535000,
-          uploadedAt: '2026-10-13 11:20'
-        }
-      ],
-      ourAmount: 535000,
-      poOrder: [
-        {
-          id: 'demo_po_doc_04',
-          name: 'Official_PO_Godrej_Woods.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          previewUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          type: 'pdf',
-          size: 199680,
-          uploadedAt: '2026-10-13 15:30'
-        }
-      ],
-      bills: [
-        { date: '2026-10-16', invoiceNo: 'INV-PA-3021', amount: 205000 }
-      ],
-      billsAmt: 205000
-    }
-  ];
 }
